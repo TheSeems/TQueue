@@ -1,0 +1,5 @@
+# Project exclude paths
+/bungee/target/
+/queue-api/target/
+/queue-common/target/
+/spigot/target/

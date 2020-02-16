@@ -1,0 +1,4 @@
+name: TQueue
+main: me.theseems.tqueue.TQueueBungeePlugin
+version: "0.2D"
+author: theseems

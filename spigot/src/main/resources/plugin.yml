@@ -1,0 +1,4 @@
+name: TQueue
+main: me.theseems.tqueue.TQueueSpigot
+version: 0.1D
+api-version: "1.14"
