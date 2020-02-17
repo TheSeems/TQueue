@@ -53,21 +53,20 @@ public abstract class TPriorityQueue implements PriorityQueue {
                 < delay) continue;
 
             if (isClosed) {
-              System.out.println("Queue '" + getName() + "' shutdown");
               destinationList.clear();
               handlerList.clear();
               queue.clear();
+              System.out.println("Queue '" + getName() + "' shutdown");
               break;
             } else if (!queue.isEmpty()) {
               try {
                 System.out.println(">> giant step <<");
-                for (UUID uuid : queue) {
-                  System.out.println("> baby step <");
-                  go(uuid);
-                }
+                UUID uuid = queue.take();
+                go(uuid);
+                System.out.println("After: (" + queue.size() + ")");
               } catch (Exception e) {
-                System.out.println("Execution exception in queue '" + getName() + "'");
-                e.printStackTrace();
+                System.out.println(
+                    "Execution exception in queue '" + getName() + "': " + e.getMessage());
               }
             }
 
@@ -87,7 +86,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
       }
       pos++;
     }
-    return -1;
+    return 0;
   }
 
   public Collection<UUID> getPlayers() {
@@ -103,22 +102,17 @@ public abstract class TPriorityQueue implements PriorityQueue {
   }
 
   public void go(UUID uuid) {
-    boolean shouldAdd = false;
-    int testi = 0;
+    boolean next = false;
+
     for (Destination destination : destinationList) {
-      System.out.println(
-          "Testing "
-              + uuid
-              + " on "
-              + destination.toString()
-              + " ("
-              + destination.getName()
-              + ") @"
-              + testi++);
       Future<Verdict> waiting = destination.query(uuid);
       Verdict verdict;
       try {
-        verdict = waiting.get(3, TimeUnit.SECONDS);
+        verdict = waiting.get(1500, TimeUnit.MILLISECONDS);
+      } catch (TimeoutException e) {
+        System.out.println(
+            "Timed out: " + e.getMessage() + " @" + destination.getName() + " @" + getName());
+        verdict = Verdict.TIMED_OUT;
       } catch (Exception e) {
         System.out.println(
             "Error getting verdict in queue '"
@@ -134,10 +128,11 @@ public abstract class TPriorityQueue implements PriorityQueue {
         continue;
       }
 
+      System.out.println("Verdict: " + verdict);
+
       for (QueueHandler queueHandler : handlerList.values()) {
-        boolean applyVerdict;
         try {
-          applyVerdict = queueHandler.apply(uuid, destination, verdict);
+          next = queueHandler.apply(uuid, destination, verdict);
         } catch (Exception e) {
           System.out.println(
               "Error applying verdict for "
@@ -148,25 +143,16 @@ public abstract class TPriorityQueue implements PriorityQueue {
                   + verdict
                   + ": "
                   + e.getMessage());
-          shouldAdd = true;
           continue;
         }
 
-        System.out.println("Handler '" + queueHandler.getName() + "' responded " + applyVerdict);
-        if (applyVerdict) {
-          System.out.println("Handler feels fine for " + uuid);
-          shouldAdd = false;
+        if (next) {
           break;
-        } else {
-          System.out.println("Handlers allows us to go on");
-          shouldAdd = true;
         }
       }
 
-      if (!shouldAdd) break;
+      if (next) break;
     }
-
-    if (!shouldAdd) queue.remove(uuid);
   }
 
   public Collection<Destination> getDestinations() {

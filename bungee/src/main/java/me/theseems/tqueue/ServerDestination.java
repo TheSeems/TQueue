@@ -38,10 +38,6 @@ public class ServerDestination implements Destination, Listener {
                 return Verdict.FORBIDDEN;
               }
 
-              if (player.getServer().getInfo().equals(info)) {
-                return Verdict.ALREADY_AT;
-              }
-
               return TQueueBungeePlugin.getMessenger()
                   .requestUser(getName(), user)
                   .get(3, TimeUnit.SECONDS);

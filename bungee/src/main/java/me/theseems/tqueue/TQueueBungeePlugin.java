@@ -11,7 +11,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class TQueueBungeePlugin extends Plugin {
   private static ProxyServer proxyServer;
@@ -73,12 +76,17 @@ public class TQueueBungeePlugin extends Plugin {
         if (destination instanceof ServerDestination)
           servers.put(destination.getName(), destination.getPriority());
         else {
-          getLogger().warning("Found non bungee destination '" + destination.getName() + "', skipping it");
+          getLogger()
+              .warning("Found non bungee destination '" + destination.getName() + "', skipping it");
         }
       }
 
-
-      BungeeQueueConfig config = new BungeeQueueConfig(queue.getName(), ((TPriorityQueue) queue).getDelay(), servers);
+      BungeeQueueConfig config =
+          new BungeeQueueConfig(
+              queue.getName(),
+              ((TPriorityQueue) queue).getDelay(),
+              servers,
+              new ArrayList<>(queue.getHandlers()));
       configList.add(config);
     }
 
@@ -106,7 +114,6 @@ public class TQueueBungeePlugin extends Plugin {
 
       getLogger().info("Registering queue '" + queueConfig.getName() + "' from config");
       Queue queue = queueConfig.construct();
-      queue.addHandler(Utils.getDefaultHandlerFor(queue));
       QueueAPI.getQueueManager().register(queue);
     }
   }

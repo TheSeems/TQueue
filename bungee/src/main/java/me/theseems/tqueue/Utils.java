@@ -19,6 +19,9 @@ public class Utils {
         }
 
         System.out.println(">> Handler " + queue.toString() + " " + verdict);
+        if (p.getServer() != null && destination.getName().equals(p.getServer().getInfo().getName()))
+          return false;
+
         if (verdict.ok) {
           p.sendMessage(
               ChatMessageType.ACTION_BAR,
@@ -28,6 +31,7 @@ public class Utils {
               ServerConnectEvent.Reason.PLUGIN);
           return true;
         } else {
+          queue.add(player);
           p.sendMessage(
               ChatMessageType.ACTION_BAR,
               new TextComponent(
