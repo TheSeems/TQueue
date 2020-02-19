@@ -3,7 +3,6 @@ package me.theseems.tqueue;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
-import org.bukkit.event.Listener;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -16,7 +15,7 @@ import java.time.Duration;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 
-public class RedisMessenger implements Listener {
+public class RedisMessenger {
   private JedisPool pool;
   private String selfHost;
 
@@ -64,17 +63,21 @@ public class RedisMessenger implements Listener {
             new JedisPubSub() {
               @Override
               public void onMessage(String channel, String message) {
-                System.out.println("Received message " + message);
-                ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
-                ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                String host = in.readUTF();
+                try {
+                  ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                  ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
+                  String host = in.readUTF();
 
-                if (host.equals(selfHost)) {
-                  out.writeUTF(selfHost);
-                  SpigotMessenger.fillOutput(in, out);
-                  System.out.println(
-                      "Got ans answer to " + message + " " + new String(out.toByteArray()));
-                  get().publish("tqueue:info:proxy", new String(out.toByteArray()));
+                  if (host.equals(selfHost)) {
+                    out.writeUTF(selfHost);
+                    SpigotMessenger.fillOutput(in, out);
+                    Jedis jedis = get();
+                    jedis.publish("tqueue:info:proxy", new String(out.toByteArray()));
+                    jedis.close();
+                  }
+                } catch (Exception e) {
+                  System.out.println("[RedisMessenger] Error while listening: " + e.getMessage());
+                  e.printStackTrace();
                 }
               }
             },
@@ -84,22 +87,6 @@ public class RedisMessenger implements Listener {
   public RedisMessenger() {
     fillSelfHost();
     pool = new JedisPool(buildPoolConfig(), "localhost");
-    TQueueSpigot.getPlugin()
-        .getServer()
-        .getPluginManager()
-        .registerEvents(this, TQueueSpigot.getPlugin());
-
-    Executors.newFixedThreadPool(1)
-        .submit(
-            () -> {
-              while (true) {
-                try {
-                  listen();
-                } catch (Exception e) {
-                  System.err.println("RD] " + e.getMessage());
-                  e.printStackTrace();
-                }
-              }
-            });
+    Executors.newFixedThreadPool(1).submit(this::listen);
   }
 }

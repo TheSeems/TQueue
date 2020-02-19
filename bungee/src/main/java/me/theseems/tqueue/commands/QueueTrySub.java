@@ -8,6 +8,9 @@ import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class QueueTrySub implements SubCommand {
   @Override
@@ -41,16 +44,16 @@ public class QueueTrySub implements SubCommand {
     CompletableFuture<Verdict> future =
         TQueueBungeePlugin.getMessenger().requestUser(serverName, player.getUniqueId());
 
-    future
-        .thenAccept(
-            result ->
-                sender.sendMessage(
-                    new TextComponent("§aRequest succeed: " + result.ok + " " + result.desc)))
-        .exceptionally(
-            throwable -> {
-              sender.sendMessage(new TextComponent("§cRequest failed... " + throwable));
-              return null;
-            });
+    Verdict result;
+    try {
+      result = future.get(5, TimeUnit.SECONDS);
+      sender.sendMessage(
+        new TextComponent("§aRequest succeed: " + result.ok + " " + result.desc + " §7(" + result + ")"));
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      sender.sendMessage(new TextComponent("§cRequest failed: §7" + e.getMessage()));
+    }
+
+
   }
 
   @Override

@@ -72,6 +72,12 @@ public interface Queue {
   int getPosition(UUID player);
 
   /**
+   * Get delay of queue
+   * @return delay of actions
+   */
+  int getDelay();
+
+  /**
    * Close queue
    */
   void close();

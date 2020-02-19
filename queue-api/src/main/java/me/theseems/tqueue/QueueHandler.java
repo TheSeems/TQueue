@@ -10,10 +10,25 @@ public interface QueueHandler {
    * @param destination that has given verdict
    * @param verdict target
    */
-  boolean apply(UUID player, Destination destination, Verdict verdict);
+  default boolean apply(UUID player, Destination destination, Verdict verdict) {
+    return false;
+  }
+
+  /**
+   * On join handler
+   * @param player joined
+   */
+  default void join(UUID player) {}
+
+  /**
+   * On leave handler
+   * @param player left
+   */
+  default void leave(UUID player) {}
 
   /**
    * Get name of handler
+   *
    * @return name
    */
   String getName();

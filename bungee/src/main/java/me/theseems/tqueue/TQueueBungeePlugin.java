@@ -4,36 +4,65 @@ import com.google.gson.GsonBuilder;
 import me.theseems.tqueue.commands.QueueCommand;
 import me.theseems.tqueue.config.BungeeQueueConfig;
 import me.theseems.tqueue.config.QueuePluginConfig;
+import me.theseems.tqueue.config.RedisConfig;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Duration;
+import java.util.*;
 
 public class TQueueBungeePlugin extends Plugin {
   private static ProxyServer proxyServer;
   private static Plugin plugin;
   private static QueuePluginConfig config;
+  private static JedisPool pool;
   private static Messenger messenger;
 
-  private File initPluginFile(String name) {
+  private static JedisPoolConfig buildPoolConfig() {
+    final JedisPoolConfig poolConfig = new JedisPoolConfig();
+    poolConfig.setMaxTotal(128);
+    poolConfig.setMaxIdle(128);
+    poolConfig.setMinIdle(16);
+    poolConfig.setTestOnBorrow(true);
+    poolConfig.setTestOnReturn(true);
+    poolConfig.setTestWhileIdle(true);
+    poolConfig.setMinEvictableIdleTimeMillis(Duration.ofSeconds(60).toMillis());
+    poolConfig.setTimeBetweenEvictionRunsMillis(Duration.ofSeconds(30).toMillis());
+    poolConfig.setNumTestsPerEvictionRun(3);
+    poolConfig.setBlockWhenExhausted(true);
+    return poolConfig;
+  }
+
+  private File initConfig() {
     if (!getDataFolder().exists()) {
       getDataFolder().mkdir();
     }
 
-    return new File(getDataFolder(), name);
+    return new File(getDataFolder(), "config.json");
   }
 
   public void loadConfig() {
-    File file = initPluginFile("config.json");
+    File file = initConfig();
     try {
       config = new GsonBuilder().create().fromJson(new FileReader(file), QueuePluginConfig.class);
+      getLogger().info("Connecting to Redis...");
+
+      pool =
+          new JedisPool(buildPoolConfig(), config.getInfo().getHost(), config.getInfo().getPort());
+
+      if (config.getInfo().getPassword() != null) {
+        Jedis jedis = pool.getResource();
+        jedis.auth(config.getInfo().getPassword());
+        jedis.close();
+      }
+
       getLogger().info("Loaded config from file");
     } catch (IOException e) {
       config =
@@ -46,6 +75,9 @@ public class TQueueBungeePlugin extends Plugin {
               },
               new HashMap<>(),
               new ArrayList<>());
+
+      config.setInfo(new RedisConfig("localhost", 6379, null));
+
       try {
         FileWriter writer = new FileWriter(file);
         new GsonBuilder().setPrettyPrinting().create().toJson(config, writer);
@@ -83,17 +115,14 @@ public class TQueueBungeePlugin extends Plugin {
 
       BungeeQueueConfig config =
           new BungeeQueueConfig(
-              queue.getName(),
-              ((TPriorityQueue) queue).getDelay(),
-              servers,
-              new ArrayList<>(queue.getHandlers()));
+              queue.getName(), queue.getDelay(), servers, new ArrayList<>(queue.getHandlers()));
       configList.add(config);
     }
 
     config.setQueues(configList);
     FileWriter writer;
     try {
-      writer = new FileWriter(initPluginFile("config.json"));
+      writer = new FileWriter(initConfig());
       new GsonBuilder().setPrettyPrinting().create().toJson(config, writer);
       writer.flush();
     } catch (IOException e) {
@@ -133,7 +162,23 @@ public class TQueueBungeePlugin extends Plugin {
 
     getLogger().info("Setting up queue API");
     new QueueAPI(5);
-    QueueAPI.setQueueManager(new TQueueManager());
+    QueueAPI.setQueueManager(
+        new TQueueManager() {
+          @Override
+          public RedisPriorityQueue make(String name, int delay) {
+            return new RedisPriorityQueue(pool, delay) {
+              @Override
+              public Integer getPriority(UUID player) {
+                return 0;
+              }
+
+              @Override
+              public String getName() {
+                return name;
+              }
+            };
+          }
+        });
     getLogger().info("Queue API set up");
 
     getLogger().info("Registering messenger");

@@ -11,8 +11,9 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Logger;
 
@@ -51,15 +52,17 @@ public class RedisMessenger implements Messenger {
         new JedisPubSub() {
           @Override
           public void onMessage(String channel, String message) {
-            logger.info("Received message on " + channel + ": " + message);
-            ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
+            try {
+              ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
+              String name = in.readUTF();
+              boolean result = in.readBoolean();
+              String additional = in.readUTF();
 
-            String name = in.readUTF();
-            boolean result = in.readBoolean();
-            String additional = in.readUTF();
-
-            logger.info("Read as " + result + " with info: " + additional);
-            answerMap.put(ipNameMap.get(name), new Pair<>(result, additional));
+              answerMap.put(ipNameMap.get(name), new Pair<>(result, additional));
+            } catch (Exception e) {
+              logger.warning("[RedisMessenger] Error listening: " + e.getMessage());
+              e.printStackTrace();
+            }
           }
         },
         "tqueue:info:proxy");
@@ -78,15 +81,7 @@ public class RedisMessenger implements Messenger {
     ipNameMap = new HashMap<>();
 
     logger.info("Listening...");
-    QueueAPI.getService().submit(() -> {
-      while (true) {
-        try {
-          listen();
-        } catch (Exception e) {
-          logger.warning(e.getMessage());
-        }
-      }
-    });
+    QueueAPI.getService().submit(this::listen);
   }
 
   String getHostFor(ServerInfo info) {
@@ -109,11 +104,12 @@ public class RedisMessenger implements Messenger {
     ipNameMap.put(host, name);
 
     ByteArrayDataOutput out = ByteStreams.newDataOutput();
-    logger.info("Pinging " + host);
 
     out.writeUTF(host);
     BungeeMessenger.forUserOut(player, out);
-    get().publish("tqueue:info:inst", new String(out.toByteArray()));
+    Jedis jedis = get();
+    jedis.publish("tqueue:info:inst", new String(out.toByteArray()));
+    jedis.close();
 
     return getVerdictCompletableFuture(name, answerMap)
         .thenApply(
@@ -128,16 +124,13 @@ public class RedisMessenger implements Messenger {
       String name, Map<String, Pair<Boolean, String>> answerMap) {
     return CompletableFuture.supplyAsync(
         () -> {
-          Calendar date = Calendar.getInstance();
-          while (ChronoUnit.SECONDS.between(date.toInstant(), Calendar.getInstance().toInstant())
-              < 5) {
+          while (true) {
             if (answerMap.containsKey(name)) {
               Pair<Boolean, String> result = answerMap.get(name);
               answerMap.remove(name);
               return result.first ? Verdict.OK : Verdict.FORBIDDEN;
             }
           }
-          throw new IllegalStateException("Request timed out");
         });
   }
 }

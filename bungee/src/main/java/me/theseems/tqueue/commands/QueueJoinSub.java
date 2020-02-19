@@ -5,6 +5,8 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
+import static me.theseems.tqueue.commands.QueueCommandUtils.requirePermission;
+
 public class QueueJoinSub implements SubCommand {
   @Override
   public void pass(CommandSender sender, String[] args) {
@@ -15,6 +17,7 @@ public class QueueJoinSub implements SubCommand {
 
     Queue queue = QueueCommandUtils.requireQueue(args[0]);
     ProxiedPlayer player = QueueCommandUtils.requirePlayer(sender.getName());
+    requirePermission(sender, "tqueue.join." + args[0]);
 
     queue.add(player.getUniqueId());
     sender.sendMessage(new TextComponent("§aYou have just joined queue §7'" + queue.getName() + "'"));

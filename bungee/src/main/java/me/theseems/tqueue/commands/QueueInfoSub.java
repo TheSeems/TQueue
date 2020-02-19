@@ -2,6 +2,7 @@ package me.theseems.tqueue.commands;
 
 import me.theseems.tqueue.Destination;
 import me.theseems.tqueue.Queue;
+import me.theseems.tqueue.TPriorityQueue;
 import me.theseems.tqueue.TQueueBungeePlugin;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -39,6 +40,22 @@ public class QueueInfoSub implements SubCommand {
     sender.sendMessage(
         new TextComponent(
             "§ePlayers §7(" + queue.getPlayers().size() + "): " + builder.toString()));
+
+    StringBuilder handlerBuilder = new StringBuilder();
+    for (String handler : queue.getHandlers()) {
+      handlerBuilder.append(handler).append(',').append(' ');
+    }
+    if (handlerBuilder.length() > 1) {
+      handlerBuilder.delete(handlerBuilder.length() - 2, handlerBuilder.length() - 1);
+    }
+
+    sender.sendMessage(
+        new TextComponent(
+            "§eHandlers §7(" + queue.getHandlers().size() + "): " + handlerBuilder.toString()));
+
+    if (queue instanceof TPriorityQueue) {
+      sender.sendMessage(new TextComponent("§eDelay: §7" + queue.getDelay()));
+    }
   }
 
   @Override

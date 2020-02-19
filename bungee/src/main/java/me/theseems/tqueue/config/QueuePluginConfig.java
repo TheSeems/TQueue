@@ -7,11 +7,16 @@ public class QueuePluginConfig {
   private Map<String, String> messages;
   private Map<String, String> settings;
   private List<BungeeQueueConfig> queues;
+  private RedisConfig info;
 
   public QueuePluginConfig(Map<String, String> messages, Map<String, String> settings, List<BungeeQueueConfig> queues) {
     this.messages = messages;
     this.settings = settings;
     this.queues = queues;
+  }
+
+  public void setInfo(RedisConfig info) {
+    this.info = info;
   }
 
   public List<BungeeQueueConfig> getQueues() {
@@ -48,5 +53,9 @@ public class QueuePluginConfig {
 
   public void setQueues(List<BungeeQueueConfig> queues) {
     this.queues = queues;
+  }
+
+  public RedisConfig getInfo() {
+    return info;
   }
 }

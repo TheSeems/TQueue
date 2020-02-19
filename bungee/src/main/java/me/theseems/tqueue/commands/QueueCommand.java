@@ -33,17 +33,21 @@ public class QueueCommand extends Command {
     subs.put(name, subCommand);
   }
 
+  public void sendBanner(CommandSender sender) {
+    sender.sendMessage(
+        new TextComponent(
+            "§3§lTQueue §fby TheSeems<me@theseems.ru> "
+                + "§7v"
+                + TQueueBungeePlugin.getPlugin().getDescription().getVersion()));
+  }
+
   @Override
   public void execute(CommandSender sender, String[] args) {
     if (args.length == 0
         || !subs.containsKey(args[0])
         || sender instanceof ProxiedPlayer
             && !sender.hasPermission(subs.get(args[0]).getPermission())) {
-      sender.sendMessage(
-          new TextComponent(
-              "§3§lTQueue §fby TheSeems<me@theseems.ru> "
-                  + "§7v"
-                  + TQueueBungeePlugin.getPlugin().getDescription().getVersion()));
+      sendBanner(sender);
       return;
     }
 
@@ -61,6 +65,8 @@ public class QueueCommand extends Command {
       sender.sendMessage(new TextComponent("§cPlayer §7'" + e.getName() + "'§c not found"));
     } catch (QueueCommandUtils.QueueNotFoundException e) {
       sender.sendMessage(new TextComponent("§cQueue §7'" + e.getName() + "'§c not found"));
+    } catch (QueueCommandUtils.InsufficientPermissionsException e) {
+      sendBanner(sender);
     } catch (Exception e) {
       sender.sendMessage(
           new TextComponent(

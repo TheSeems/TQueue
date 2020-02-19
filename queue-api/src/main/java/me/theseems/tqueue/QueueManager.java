@@ -28,4 +28,11 @@ public interface QueueManager {
    * @return queue list
    */
   Collection<Queue> getQueues();
+
+  /**
+   * Make queue (using default in system)
+   * @param name of queue
+   * @return queue
+   */
+  Queue make(String name, int delay);
 }

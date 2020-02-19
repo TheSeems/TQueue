@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TQueueManager implements QueueManager {
+public abstract class TQueueManager implements QueueManager {
   private Map<String, Queue> queueMap;
 
   public TQueueManager() {

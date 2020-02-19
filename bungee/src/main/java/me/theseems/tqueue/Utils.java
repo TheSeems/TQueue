@@ -23,6 +23,7 @@ public class Utils {
           return false;
 
         if (verdict.ok) {
+          queue.remove(player);
           p.sendMessage(
               ChatMessageType.ACTION_BAR,
               new TextComponent(TQueueBungeePlugin.getConfig().get("passed")));
@@ -31,7 +32,6 @@ public class Utils {
               ServerConnectEvent.Reason.PLUGIN);
           return true;
         } else {
-          queue.add(player);
           p.sendMessage(
               ChatMessageType.ACTION_BAR,
               new TextComponent(

@@ -1,11 +1,13 @@
 package me.theseems.tqueue.commands;
 
-import me.theseems.tqueue.*;
+import me.theseems.tqueue.Queue;
+import me.theseems.tqueue.QueueAPI;
+import me.theseems.tqueue.ServerDestination;
+import me.theseems.tqueue.Utils;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static me.theseems.tqueue.commands.QueueInfoSub.sendInfo;
 
@@ -28,17 +30,7 @@ public class QueueCreateSub implements SubCommand {
       return;
     }
 
-    TPriorityQueue queue = new TPriorityQueue(1000) {
-      @Override
-      public Integer getPriority(UUID player) {
-        return 0;
-      }
-
-      @Override
-      public String getName() {
-        return name;
-      }
-    };
+    Queue queue = QueueAPI.getQueueManager().make(name, 600);
 
     for (int i = 1; i < args.length; i++) {
       String newDestination = args[i];

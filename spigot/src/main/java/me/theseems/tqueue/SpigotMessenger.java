@@ -31,7 +31,6 @@ public class SpigotMessenger implements PluginMessageListener, Listener {
   }
 
   static void fillOutput(ByteArrayDataInput in, ByteArrayDataOutput out) {
-
     try {
       String host = in.readUTF();
       String ip = in.readUTF();
@@ -41,6 +40,8 @@ public class SpigotMessenger implements PluginMessageListener, Listener {
       Verdict verdict = TQueueSpigot.getReplier().process(uuid);
       out.writeBoolean(verdict.ok);
       out.writeUTF(verdict.desc);
+
+      System.out.println("Returning " + verdict);
 
     } catch (Exception e) {
       e.printStackTrace();

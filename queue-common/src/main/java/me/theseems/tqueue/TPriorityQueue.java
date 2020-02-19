@@ -9,8 +9,11 @@ public abstract class TPriorityQueue implements PriorityQueue {
   class TQueueItemComparator implements Comparator<UUID> {
     @Override
     public int compare(UUID uuid, UUID t1) {
-      if (uuid == t1) return uuid.compareTo(t1);
-      return Integer.compare(getPriority(t1), getPriority(uuid));
+      int priority_first = getPriority(uuid);
+      int priority_second = getPriority(t1);
+
+      if (priority_first == priority_second) return uuid.compareTo(t1);
+      return Integer.compare(priority_first, priority_second);
     }
   }
 
@@ -23,11 +26,11 @@ public abstract class TPriorityQueue implements PriorityQueue {
     }
   }
 
-  private PriorityBlockingQueue<UUID> queue;
-  private PriorityBlockingQueue<Destination> destinationList;
-  private Map<String, QueueHandler> handlerList;
-  private boolean isClosed;
-  private int delay;
+  ConcurrentSkipListSet<UUID> queue;
+  PriorityBlockingQueue<Destination> destinationList;
+  Map<String, QueueHandler> handlerList;
+  boolean isClosed;
+  int delay;
 
   @Override
   public void removeHandler(String name) {
@@ -39,7 +42,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
   }
 
   public TPriorityQueue(int delay) {
-    this.queue = new PriorityBlockingQueue<>(1, new TQueueItemComparator());
+    this.queue = new ConcurrentSkipListSet<>(new TQueueItemComparator());
     this.destinationList = new PriorityBlockingQueue<>(1, new TQueueDestinationComparator());
     this.handlerList = new ConcurrentHashMap<>();
     this.isClosed = false;
@@ -60,10 +63,10 @@ public abstract class TPriorityQueue implements PriorityQueue {
               break;
             } else if (!queue.isEmpty()) {
               try {
-                System.out.println(">> giant step <<");
-                UUID uuid = queue.take();
-                go(uuid);
-                System.out.println("After: (" + queue.size() + ")");
+                ConcurrentSkipListSet<UUID> clone = queue.clone();
+                for (UUID uuid : clone) {
+                  go(uuid);
+                }
               } catch (Exception e) {
                 System.out.println(
                     "Execution exception in queue '" + getName() + "': " + e.getMessage());
@@ -77,10 +80,12 @@ public abstract class TPriorityQueue implements PriorityQueue {
     QueueAPI.getService().submit(runnable);
   }
 
+  public TPriorityQueue() {}
+
   @Override
   public int getPosition(UUID player) {
     int pos = 0;
-    for (UUID uuid : queue) {
+    for (UUID uuid : getPlayers()) {
       if (uuid == player) {
         return pos + 1;
       }
@@ -95,10 +100,16 @@ public abstract class TPriorityQueue implements PriorityQueue {
 
   public void remove(UUID player) {
     queue.remove(player);
+    for (QueueHandler value : handlerList.values()) {
+      value.leave(player);
+    }
   }
 
   public void add(UUID player) {
-    if (!queue.contains(player)) queue.add(player);
+    queue.add(player);
+    for (QueueHandler value : handlerList.values()) {
+      value.join(player);
+    }
   }
 
   public void go(UUID uuid) {
@@ -108,7 +119,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
       Future<Verdict> waiting = destination.query(uuid);
       Verdict verdict;
       try {
-        verdict = waiting.get(1500, TimeUnit.MILLISECONDS);
+        verdict = waiting.get(300, TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {
         System.out.println(
             "Timed out: " + e.getMessage() + " @" + destination.getName() + " @" + getName());
@@ -127,8 +138,6 @@ public abstract class TPriorityQueue implements PriorityQueue {
         e.printStackTrace();
         continue;
       }
-
-      System.out.println("Verdict: " + verdict);
 
       for (QueueHandler queueHandler : handlerList.values()) {
         try {
