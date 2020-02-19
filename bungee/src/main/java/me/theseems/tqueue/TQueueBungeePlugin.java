@@ -55,11 +55,11 @@ public class TQueueBungeePlugin extends Plugin {
       getLogger().info("Connecting to Redis...");
 
       pool =
-          new JedisPool(buildPoolConfig(), config.getInfo().getHost(), config.getInfo().getPort());
+          new JedisPool(buildPoolConfig(), config.getRedisConfig().getHost(), config.getRedisConfig().getPort());
 
-      if (config.getInfo().getPassword() != null) {
+      if (config.getRedisConfig().getPassword() != null) {
         Jedis jedis = pool.getResource();
-        jedis.auth(config.getInfo().getPassword());
+        jedis.auth(config.getRedisConfig().getPassword());
         jedis.close();
       }
 
@@ -76,7 +76,7 @@ public class TQueueBungeePlugin extends Plugin {
               new HashMap<>(),
               new ArrayList<>());
 
-      config.setInfo(new RedisConfig("localhost", 6379, null));
+      config.setRedisConfig(new RedisConfig("localhost", 6379, null));
 
       try {
         FileWriter writer = new FileWriter(file);

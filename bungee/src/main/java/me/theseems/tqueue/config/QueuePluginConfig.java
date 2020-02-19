@@ -7,7 +7,7 @@ public class QueuePluginConfig {
   private Map<String, String> messages;
   private Map<String, String> settings;
   private List<BungeeQueueConfig> queues;
-  private RedisConfig info;
+  private RedisConfig redisConfig;
 
   public QueuePluginConfig(Map<String, String> messages, Map<String, String> settings, List<BungeeQueueConfig> queues) {
     this.messages = messages;
@@ -15,8 +15,8 @@ public class QueuePluginConfig {
     this.queues = queues;
   }
 
-  public void setInfo(RedisConfig info) {
-    this.info = info;
+  public void setRedisConfig(RedisConfig redisConfig) {
+    this.redisConfig = redisConfig;
   }
 
   public List<BungeeQueueConfig> getQueues() {
@@ -55,7 +55,7 @@ public class QueuePluginConfig {
     this.queues = queues;
   }
 
-  public RedisConfig getInfo() {
-    return info;
+  public RedisConfig getRedisConfig() {
+    return redisConfig;
   }
 }
