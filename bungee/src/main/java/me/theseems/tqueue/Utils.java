@@ -18,9 +18,8 @@ public class Utils {
           return true;
         }
 
-        System.out.println(">> Handler " + queue.toString() + " " + verdict);
-        if (p.getServer() != null && destination.getName().equals(p.getServer().getInfo().getName()))
-          return false;
+        if (p.getServer() != null
+            && destination.getName().equals(p.getServer().getInfo().getName())) return false;
 
         if (verdict.ok) {
           queue.remove(player);
@@ -39,6 +38,13 @@ public class Utils {
                       TQueueBungeePlugin.getConfig().get("status"),
                       queue.getPosition(player),
                       queue.getPlayers().size())));
+          p.sendMessage(
+              ChatMessageType.CHAT,
+              new TextComponent(
+                  MessageFormat.format(
+                      TQueueBungeePlugin.getConfig().get("verdict"),
+                      verdict.name(),
+                      verdict.desc)));
           return false;
         }
       }

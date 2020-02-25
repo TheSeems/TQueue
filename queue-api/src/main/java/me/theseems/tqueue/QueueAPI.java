@@ -4,11 +4,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class QueueAPI {
-  /** Executor service for TQueue */
+  // Default executor service
   private static ExecutorService service;
 
-  /** Queue manager for registering queues and getting information about them */
+  // Queue manager for registering queues and getting information about them
   private static QueueManager queueManager;
+
+  // Log manager
+  private static QueueLogManager logManager;
 
   public QueueAPI(int threads) {
     setService(Executors.newFixedThreadPool(threads));
@@ -28,5 +31,9 @@ public class QueueAPI {
 
   public static void setQueueManager(QueueManager queueManager) {
     QueueAPI.queueManager = queueManager;
+  }
+
+  public static QueueLogManager logs() {
+    return logManager;
   }
 }

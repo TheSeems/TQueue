@@ -1,5 +1,7 @@
 package me.theseems.tqueue;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
 import java.util.Optional;
 
@@ -9,7 +11,7 @@ public interface QueueManager {
    * @param name of queue
    * @return optional of queue
    */
-  Optional<Queue> getQueue(String name);
+  Optional<Queue> getQueue(@NotNull String name);
 
   /**
    * Register queue to manager
@@ -34,5 +36,5 @@ public interface QueueManager {
    * @param name of queue
    * @return queue
    */
-  Queue make(String name, int delay);
+  Queue make(@NotNull String name, int delay);
 }

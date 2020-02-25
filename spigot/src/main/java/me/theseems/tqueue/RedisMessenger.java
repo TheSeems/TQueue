@@ -12,12 +12,38 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
-public class RedisMessenger {
+public class RedisMessenger implements QueueCommunicator {
   private JedisPool pool;
   private String selfHost;
+
+  public void shutdown() {
+    pool.destroy();
+  }
+
+  public RedisMessenger() {
+    fillSelfHost();
+    pool = new JedisPool(buildPoolConfig(), "localhost");
+    Executors.newFixedThreadPool(1).submit(this::listen);
+  }
+
+  void fillOutput(ByteArrayDataInput in, ByteArrayDataOutput out) {
+    try {
+      UUID uuid = UUID.fromString(in.readUTF());
+      Verdict verdict = TQueueSpigot.getReplier().process(uuid);
+      out.writeBoolean(verdict.ok);
+      out.writeUTF(verdict.desc);
+    } catch (Exception e) {
+      e.printStackTrace();
+      out.writeBoolean(false);
+      out.writeUTF("Internal error: " + e.getMessage());
+    }
+  }
 
   public void fillSelfHost() {
     int port;
@@ -58,22 +84,26 @@ public class RedisMessenger {
   }
 
   public void listen() {
-    get()
-        .subscribe(
+    Jedis jedis = get();
+    jedis.subscribe(
             new JedisPubSub() {
               @Override
               public void onMessage(String channel, String message) {
                 try {
                   ByteArrayDataOutput out = ByteStreams.newDataOutput();
                   ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
+                  System.out.println("MSG " + message);
                   String host = in.readUTF();
+                  System.out.println("Ours " + selfHost + " VV " + host);
 
                   if (host.equals(selfHost)) {
+                    System.out.println("Outs!");
                     out.writeUTF(selfHost);
-                    SpigotMessenger.fillOutput(in, out);
+                    fillOutput(in, out);
                     Jedis jedis = get();
                     jedis.publish("tqueue:info:proxy", new String(out.toByteArray()));
                     jedis.close();
+                    System.out.println("Published " + new String(out.toByteArray()));
                   }
                 } catch (Exception e) {
                   System.out.println("[RedisMessenger] Error while listening: " + e.getMessage());
@@ -84,9 +114,26 @@ public class RedisMessenger {
             "tqueue:info:inst");
   }
 
-  public RedisMessenger() {
-    fillSelfHost();
-    pool = new JedisPool(buildPoolConfig(), "localhost");
-    Executors.newFixedThreadPool(1).submit(this::listen);
+  @Override
+  public void join(UUID player, String name) {
+    Jedis jedis = get();
+    jedis.zadd(name, 0, player.toString());
+    jedis.close();
+  }
+
+  @Override
+  public void leave(UUID player, String name) {
+    Jedis jedis = get();
+    jedis.zrem(name, player.toString());
+    jedis.close();
+  }
+
+  @Override
+  public Collection<UUID> getPlayers(String name) {
+    Jedis jedis = get();
+    Collection<String> result = jedis.zrange(name, 0, -1);
+    jedis.close();
+
+    return result.stream().map(UUID::fromString).collect(Collectors.toList());
   }
 }

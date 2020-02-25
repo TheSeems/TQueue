@@ -46,6 +46,12 @@ public class RedisMessenger implements Messenger {
     }
   }
 
+  void fillOutputFor(UUID player, ByteArrayDataOutput out) {
+    ProxiedPlayer pp = TQueueBungeePlugin.getProxyServer().getPlayer(player);
+    assert pp != null;
+    out.writeUTF(player.toString());
+  }
+
   public void listen() {
     Jedis jedis = get();
     jedis.subscribe(
@@ -104,9 +110,9 @@ public class RedisMessenger implements Messenger {
     ipNameMap.put(host, name);
 
     ByteArrayDataOutput out = ByteStreams.newDataOutput();
-
     out.writeUTF(host);
-    BungeeMessenger.forUserOut(player, out);
+
+    fillOutputFor(player, out);
     Jedis jedis = get();
     jedis.publish("tqueue:info:inst", new String(out.toByteArray()));
     jedis.close();

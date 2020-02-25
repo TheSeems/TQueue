@@ -5,7 +5,8 @@ public enum Verdict {
   FORBIDDEN(false, "Forbidden"),
   WHITELISTED(false, "Whitelisted"),
   ALREADY_AT(false, "Current server"),
-  TIMED_OUT(false, "Timed out");
+  TIMED_OUT(false, "Timed out"),
+  UNKNOWN(false, "Unknown");
 
   public boolean ok;
   public String desc;

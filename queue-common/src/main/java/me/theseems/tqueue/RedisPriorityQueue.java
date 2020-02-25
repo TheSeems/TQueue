@@ -23,12 +23,38 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
   }
 
   @Override
+  public void close() {
+    super.close();
+    if (pool != null){
+      pool.destroy();
+      System.out.println("Redis pool destroyed @" + getName());
+    }
+  }
+
+  @Override
   public void add(UUID player) {
     Jedis jedis = pool.getResource();
     jedis.zadd(getName(), getPriority(player), player.toString());
     jedis.close();
 
     handlerList.values().forEach(handler -> handler.join(player));
+  }
+
+  @Override
+  public int getPosition(UUID player) {
+    Jedis jedis = pool.getResource();
+    Set<String> response = jedis.zrange(getName(), 0, -1);
+    jedis.close();
+
+    int pos = 0;
+    for (String s : response) {
+      pos++;
+      if (player.equals(UUID.fromString(s))) {
+        return pos;
+      }
+    }
+
+    return 0;
   }
 
   @Override
@@ -59,7 +85,6 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
                 Set<String> response = jedis.zrange(getName(), 0, -1);
                 jedis.close();
                 for (String s : response) {
-                  System.out.println("SS " + s);
                   UUID uuid = UUID.fromString(s);
                   go(uuid);
                 }

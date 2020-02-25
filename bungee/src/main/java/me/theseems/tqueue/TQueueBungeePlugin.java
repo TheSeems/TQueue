@@ -7,6 +7,7 @@ import me.theseems.tqueue.config.QueuePluginConfig;
 import me.theseems.tqueue.config.RedisConfig;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -40,6 +41,18 @@ public class TQueueBungeePlugin extends Plugin {
     return poolConfig;
   }
 
+  private static JedisPool generate() {
+    pool =
+      new JedisPool(buildPoolConfig(), config.getRedisConfig().getHost(), config.getRedisConfig().getPort());
+
+    if (config.getRedisConfig().getPassword() != null) {
+      Jedis jedis = pool.getResource();
+      jedis.auth(config.getRedisConfig().getPassword());
+      jedis.close();
+    }
+    return pool;
+  }
+
   private File initConfig() {
     if (!getDataFolder().exists()) {
       getDataFolder().mkdir();
@@ -53,24 +66,16 @@ public class TQueueBungeePlugin extends Plugin {
     try {
       config = new GsonBuilder().create().fromJson(new FileReader(file), QueuePluginConfig.class);
       getLogger().info("Connecting to Redis...");
-
-      pool =
-          new JedisPool(buildPoolConfig(), config.getRedisConfig().getHost(), config.getRedisConfig().getPort());
-
-      if (config.getRedisConfig().getPassword() != null) {
-        Jedis jedis = pool.getResource();
-        jedis.auth(config.getRedisConfig().getPassword());
-        jedis.close();
-      }
-
+      pool = generate();
       getLogger().info("Loaded config from file");
     } catch (IOException e) {
       config =
           new QueuePluginConfig(
               new HashMap<String, String>() {
                 {
-                  put("status", "§7In queue... {0}/{1}. To leave type /queue leave");
+                  put("status", "§7Queued: {0}/{1}");
                   put("passed", "§aQueue passed");
+                  put("verdict", "§7Queue: {0} | {1}");
                 }
               },
               new HashMap<>(),
@@ -165,8 +170,8 @@ public class TQueueBungeePlugin extends Plugin {
     QueueAPI.setQueueManager(
         new TQueueManager() {
           @Override
-          public RedisPriorityQueue make(String name, int delay) {
-            return new RedisPriorityQueue(pool, delay) {
+          public RedisPriorityQueue make(@NotNull String name, int delay) {
+            return new RedisPriorityQueue(generate(), delay) {
               @Override
               public Integer getPriority(UUID player) {
                 return 0;

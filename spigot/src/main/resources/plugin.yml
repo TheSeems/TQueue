@@ -2,3 +2,16 @@ name: TQueue
 main: me.theseems.tqueue.TQueueSpigot
 version: 0.1D
 api-version: "1.14"
+commands:
+  qjoin:
+    description: Join a queue
+    usage: /qjoin <queue_name>
+    permission: tqueue.local.join
+  qleave:
+    description: Leave a queue
+    usage: /qleave <queue_name>
+    permission: tqueue.local.leave
+  qinfo:
+    description: Get info about a queue
+    usage: /qinfo <queue_name>
+    permission: tqueue.local.info

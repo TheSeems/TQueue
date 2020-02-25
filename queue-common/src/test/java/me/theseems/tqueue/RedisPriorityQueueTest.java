@@ -38,13 +38,14 @@ public class RedisPriorityQueueTest {
       }
     };
 
-    redisPriorityQueue.addDestination(new DummyDestination(Verdict.FORBIDDEN, "test", 0));
+    redisPriorityQueue.addDestination(new DummyDestination(Verdict.OK, "test", 0));
     redisPriorityQueue.add(UUID.randomUUID());
     redisPriorityQueue.addHandler(
         new QueueHandler() {
           @Override
           public boolean apply(UUID player, Destination destination, Verdict verdict) {
             System.out.println(player + " @ " + destination.getName() + " -> " + verdict);
+            redisPriorityQueue.remove(player);
             return true;
           }
 

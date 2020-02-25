@@ -3,34 +3,41 @@ package me.theseems.tqueue;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 
 public abstract class TPriorityQueue implements PriorityQueue {
+  ConcurrentSkipListSet<UUID> queue;
+  PriorityBlockingQueue<Destination> destinationList;
+  Map<String, QueueHandler> handlerList;
+  boolean isClosed;
+  Logger logger;
+  int delay;
 
-  class TQueueItemComparator implements Comparator<UUID> {
+  class TQueuePlayerComparator implements Comparator<UUID> {
     @Override
     public int compare(UUID uuid, UUID t1) {
       int priority_first = getPriority(uuid);
       int priority_second = getPriority(t1);
 
       if (priority_first == priority_second) return uuid.compareTo(t1);
-      return Integer.compare(priority_first, priority_second);
+
+      // Bigger priority goes higher
+      return Integer.compare(priority_second, priority_first);
     }
   }
 
   static class TQueueDestinationComparator implements Comparator<Destination> {
     @Override
-    public int compare(Destination destination, Destination t1) {
-      if (!destination.getName().equals(t1.getName()))
-        return Integer.compare(t1.getPriority(), destination.getPriority());
-      return destination.getName().compareTo(t1.getName());
+    public int compare(Destination first, Destination second) {
+      String nameFirst = first.getName();
+      String nameSecond = second.getName();
+
+      if (!nameFirst.equals(nameSecond)) return nameFirst.compareTo(nameSecond);
+
+      // Bigger priority goes higher
+      return Integer.compare(second.getPriority(), first.getPriority());
     }
   }
-
-  ConcurrentSkipListSet<UUID> queue;
-  PriorityBlockingQueue<Destination> destinationList;
-  Map<String, QueueHandler> handlerList;
-  boolean isClosed;
-  int delay;
 
   @Override
   public void removeHandler(String name) {
@@ -41,25 +48,28 @@ public abstract class TPriorityQueue implements PriorityQueue {
     return handlerList.keySet();
   }
 
-  public TPriorityQueue(int delay) {
-    this.queue = new ConcurrentSkipListSet<>(new TQueueItemComparator());
+  public TPriorityQueue(int delay, Logger logger) {
+    this.queue = new ConcurrentSkipListSet<>(new TQueuePlayerComparator());
     this.destinationList = new PriorityBlockingQueue<>(1, new TQueueDestinationComparator());
     this.handlerList = new ConcurrentHashMap<>();
     this.isClosed = false;
     this.delay = delay;
+    this.logger = logger;
 
     Runnable runnable =
         () -> {
           Date latest = new Date();
           while (true) {
-            if (ChronoUnit.MILLIS.between(latest.toInstant(), Calendar.getInstance().toInstant())
-                < delay) continue;
+            if (ChronoUnit.MILLIS.between(latest.toInstant(), new Date().toInstant()) < delay) {
+              continue;
+            }
 
             if (isClosed) {
+              logger.info("Queue '" + getName() + "' shutting down...");
               destinationList.clear();
               handlerList.clear();
               queue.clear();
-              System.out.println("Queue '" + getName() + "' shutdown");
+              logger.info("Queue '" + getName() + "' shut down...");
               break;
             } else if (!queue.isEmpty()) {
               try {
@@ -68,8 +78,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
                   go(uuid);
                 }
               } catch (Exception e) {
-                System.out.println(
-                    "Execution exception in queue '" + getName() + "': " + e.getMessage());
+                logger.info("Execution exception in queue '" + getName() + "': " + e.getMessage());
               }
             }
 
@@ -78,6 +87,10 @@ public abstract class TPriorityQueue implements PriorityQueue {
         };
 
     QueueAPI.getService().submit(runnable);
+  }
+
+  public TPriorityQueue(int delay) {
+    this(delay, Logger.getLogger("TPriorityQueue"));
   }
 
   public TPriorityQueue() {}
@@ -116,25 +129,13 @@ public abstract class TPriorityQueue implements PriorityQueue {
     boolean next = false;
 
     for (Destination destination : destinationList) {
-      Future<Verdict> waiting = destination.query(uuid);
       Verdict verdict;
       try {
-        verdict = waiting.get(300, TimeUnit.MILLISECONDS);
+        Future<Verdict> waiting = destination.query(uuid);
+        verdict = waiting.get(1000, TimeUnit.MILLISECONDS);
       } catch (TimeoutException e) {
-        System.out.println(
-            "Timed out: " + e.getMessage() + " @" + destination.getName() + " @" + getName());
         verdict = Verdict.TIMED_OUT;
       } catch (Exception e) {
-        System.out.println(
-            "Error getting verdict in queue '"
-                + getName()
-                + "' for "
-                + uuid
-                + " @"
-                + destination.toString()
-                + " ("
-                + destination.getName()
-                + ")");
         e.printStackTrace();
         continue;
       }
@@ -143,7 +144,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
         try {
           next = queueHandler.apply(uuid, destination, verdict);
         } catch (Exception e) {
-          System.out.println(
+          logger.severe(
               "Error applying verdict for "
                   + uuid
                   + " and "
@@ -152,6 +153,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
                   + verdict
                   + ": "
                   + e.getMessage());
+          e.printStackTrace();
           continue;
         }
 
@@ -162,6 +164,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
 
       if (next) break;
     }
+
   }
 
   public Collection<Destination> getDestinations() {
@@ -190,5 +193,10 @@ public abstract class TPriorityQueue implements PriorityQueue {
 
   public int getDelay() {
     return delay;
+  }
+
+  @Override
+  public String getName() {
+    return "<UNKNOWN>";
   }
 }

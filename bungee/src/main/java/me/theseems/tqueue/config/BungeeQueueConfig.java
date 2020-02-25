@@ -1,13 +1,12 @@
 package me.theseems.tqueue.config;
 
 import me.theseems.tqueue.Queue;
+import me.theseems.tqueue.QueueAPI;
 import me.theseems.tqueue.ServerDestination;
-import me.theseems.tqueue.TPriorityQueue;
 import me.theseems.tqueue.Utils;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class BungeeQueueConfig {
   private String name;
@@ -24,18 +23,7 @@ public class BungeeQueueConfig {
   }
 
   public Queue construct() {
-    TPriorityQueue queue =
-        new TPriorityQueue(delay) {
-          @Override
-          public Integer getPriority(UUID player) {
-            return 0;
-          }
-
-          @Override
-          public String getName() {
-            return name;
-          }
-        };
+    Queue queue = QueueAPI.getQueueManager().make(name, delay);
 
     servers.forEach((s, integer) -> queue.addDestination(new ServerDestination(s, integer)));
     if (handlers.contains("bungee-default"))
