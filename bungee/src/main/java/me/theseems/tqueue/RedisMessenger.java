@@ -5,6 +5,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
+import org.jetbrains.annotations.NotNull;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -21,9 +22,13 @@ public class RedisMessenger implements Messenger {
   private JedisPool pool;
   private Logger logger;
   private Map<String, Pair<Boolean, String>> answerMap;
-  private Map<String, String> ipNameMap;
 
   private JedisPoolConfig buildPoolConfig() {
+    return getJedisPoolConfig();
+  }
+
+  @NotNull
+  static JedisPoolConfig getJedisPoolConfig() {
     final JedisPoolConfig poolConfig = new JedisPoolConfig();
     poolConfig.setMaxTotal(128);
     poolConfig.setMaxIdle(128);
@@ -59,12 +64,13 @@ public class RedisMessenger implements Messenger {
           @Override
           public void onMessage(String channel, String message) {
             try {
+              logger.info("[RedisMessenger] Message: " + message);
               ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
               String name = in.readUTF();
               boolean result = in.readBoolean();
               String additional = in.readUTF();
 
-              answerMap.put(ipNameMap.get(name), new Pair<>(result, additional));
+              answerMap.put(name, new Pair<>(result, additional));
             } catch (Exception e) {
               logger.warning("[RedisMessenger] Error listening: " + e.getMessage());
               e.printStackTrace();
@@ -84,21 +90,16 @@ public class RedisMessenger implements Messenger {
             buildPoolConfig(),
             TQueueBungeePlugin.getConfig().getSetting("redis_host", "localhost"));
     answerMap = new HashMap<>();
-    ipNameMap = new HashMap<>();
 
     logger.info("Listening...");
     QueueAPI.getService().submit(this::listen);
-  }
-
-  String getHostFor(ServerInfo info) {
-    return info.getAddress().getHostString() + ":" + info.getAddress().getPort();
   }
 
   @Override
   public CompletableFuture<Verdict> requestUser(String name, UUID player) {
     ServerInfo info = TQueueBungeePlugin.getProxyServer().getServerInfo(name);
     if (info == null) {
-      return CompletableFuture.completedFuture(Verdict.FORBIDDEN);
+      return CompletableFuture.completedFuture(Verdict.UNKNOWN);
     }
 
     ProxiedPlayer proxiedPlayer = TQueueBungeePlugin.getProxyServer().getPlayer(player);
@@ -106,24 +107,14 @@ public class RedisMessenger implements Messenger {
       return CompletableFuture.completedFuture(Verdict.FORBIDDEN);
     }
 
-    String host = getHostFor(info);
-    ipNameMap.put(host, name);
-
     ByteArrayDataOutput out = ByteStreams.newDataOutput();
-    out.writeUTF(host);
 
     fillOutputFor(player, out);
     Jedis jedis = get();
-    jedis.publish("tqueue:info:inst", new String(out.toByteArray()));
+    jedis.publish("tqueue:info:" + name, new String(out.toByteArray()));
     jedis.close();
 
-    return getVerdictCompletableFuture(name, answerMap)
-        .thenApply(
-            verdict -> {
-              ipNameMap.remove(
-                  info.getAddress().getHostString() + ":" + info.getAddress().getPort());
-              return verdict;
-            });
+    return getVerdictCompletableFuture(name, answerMap);
   }
 
   static CompletableFuture<Verdict> getVerdictCompletableFuture(

@@ -21,7 +21,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
 
       if (priority_first == priority_second) return uuid.compareTo(t1);
 
-      // Bigger priority goes higher
+      // Higher priority goes higher
       return Integer.compare(priority_second, priority_first);
     }
   }
@@ -34,7 +34,7 @@ public abstract class TPriorityQueue implements PriorityQueue {
 
       if (!nameFirst.equals(nameSecond)) return nameFirst.compareTo(nameSecond);
 
-      // Bigger priority goes higher
+      // Higher priority goes higher
       return Integer.compare(second.getPriority(), first.getPriority());
     }
   }

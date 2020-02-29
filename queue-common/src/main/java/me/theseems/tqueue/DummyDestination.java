@@ -31,10 +31,14 @@ public class DummyDestination implements Destination {
 
   @Override
   public String toString() {
-    return "DummyDestination{" +
-      "verdict=" + verdict +
-      ", name='" + name + '\'' +
-      ", priority=" + priority +
-      '}';
+    return "DummyDestination{"
+        + "verdict="
+        + verdict
+        + ", name='"
+        + name
+        + '\''
+        + ", priority="
+        + priority
+        + '}';
   }
 }

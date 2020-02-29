@@ -1,15 +1,18 @@
 package me.theseems.tqueue;
 
 import com.google.gson.GsonBuilder;
-import org.bukkit.BanEntry;
-import org.bukkit.BanList;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Protocol;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -26,6 +29,26 @@ public class TQueueSpigot extends JavaPlugin {
       target.createNewFile();
     }
     return target;
+  }
+
+  private JedisPool buildPool() {
+    final JedisPoolConfig poolConfig = new JedisPoolConfig();
+    poolConfig.setMaxTotal(128);
+    poolConfig.setMaxIdle(128);
+    poolConfig.setMinIdle(16);
+    poolConfig.setTestOnBorrow(false);
+    poolConfig.setTestOnReturn(true);
+    poolConfig.setTestWhileIdle(true);
+    poolConfig.setMinEvictableIdleTimeMillis(Duration.ofSeconds(60).toMillis());
+    poolConfig.setTimeBetweenEvictionRunsMillis(Duration.ofSeconds(30).toMillis());
+    poolConfig.setNumTestsPerEvictionRun(3);
+    poolConfig.setBlockWhenExhausted(true);
+    return new JedisPool(
+        poolConfig,
+        config.getRedisConfig().getHost(),
+        config.getRedisConfig().getPort(),
+        Protocol.DEFAULT_TIMEOUT,
+        config.getRedisConfig().getPassword());
   }
 
   private void loadConfig() {
@@ -57,7 +80,7 @@ public class TQueueSpigot extends JavaPlugin {
 
     getLogger().info("Setting up messaging");
     replier = new SimplePingReplier();
-    communicator = new RedisMessenger();
+    communicator = new RedisMessenger(buildPool());
 
     // Whitelist
     replier.addProcessor(
@@ -72,22 +95,18 @@ public class TQueueSpigot extends JavaPlugin {
     // Ban
     replier.addProcessor(
         player -> {
-          if (getServer().getBannedPlayers().contains(getServer().getOfflinePlayer(player))) {
+          OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(player);
+          if (offlinePlayer.getName() == null) {
+            return Optional.empty();
+          }
+
+          if (offlinePlayer.isBanned()) {
+            BanEntry entry =
+                Bukkit.getBanList(BanList.Type.NAME).getBanEntry(offlinePlayer.getName());
             Verdict verdict = Verdict.FORBIDDEN;
-            OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(player);
-            if (offlinePlayer.getName() == null) {
-              return Optional.empty();
+            if (entry != null) {
+              verdict.setDesc(ChatColor.stripColor(entry.getReason()));
             }
-
-            BanEntry entry = getServer()
-              .getBanList(BanList.Type.NAME)
-              .getBanEntry(offlinePlayer.getName());
-
-            if (entry == null) {
-              return Optional.empty();
-            }
-
-            verdict.setDesc(entry.getReason());
             return Optional.of(verdict);
           }
           return Optional.empty();
@@ -97,6 +116,11 @@ public class TQueueSpigot extends JavaPlugin {
     Objects.requireNonNull(getCommand("qleave")).setExecutor(new QueueLeaveLocalCommand());
     Objects.requireNonNull(getCommand("qinfo")).setExecutor(new QueueInfoLocalCommand());
     getLogger().info("Ready");
+  }
+
+  @NotNull
+  public static SpigotQueueConfig getSettings() {
+    return config;
   }
 
   public static Plugin getPlugin() {

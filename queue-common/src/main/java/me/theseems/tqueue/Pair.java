@@ -1,4 +1,5 @@
 package me.theseems.tqueue;
+
 // Pair class
 public class Pair<U, V> {
   public final U first; // first field of a Pair

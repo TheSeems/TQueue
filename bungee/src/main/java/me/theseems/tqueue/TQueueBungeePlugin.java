@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 
+import static me.theseems.tqueue.RedisMessenger.getJedisPoolConfig;
+
 public class TQueueBungeePlugin extends Plugin {
   private static ProxyServer proxyServer;
   private static Plugin plugin;
@@ -27,18 +29,7 @@ public class TQueueBungeePlugin extends Plugin {
   private static Messenger messenger;
 
   private static JedisPoolConfig buildPoolConfig() {
-    final JedisPoolConfig poolConfig = new JedisPoolConfig();
-    poolConfig.setMaxTotal(128);
-    poolConfig.setMaxIdle(128);
-    poolConfig.setMinIdle(16);
-    poolConfig.setTestOnBorrow(true);
-    poolConfig.setTestOnReturn(true);
-    poolConfig.setTestWhileIdle(true);
-    poolConfig.setMinEvictableIdleTimeMillis(Duration.ofSeconds(60).toMillis());
-    poolConfig.setTimeBetweenEvictionRunsMillis(Duration.ofSeconds(30).toMillis());
-    poolConfig.setNumTestsPerEvictionRun(3);
-    poolConfig.setBlockWhenExhausted(true);
-    return poolConfig;
+    return getJedisPoolConfig();
   }
 
   private static JedisPool generate() {
@@ -167,6 +158,7 @@ public class TQueueBungeePlugin extends Plugin {
 
     getLogger().info("Setting up queue API");
     new QueueAPI(5);
+    QueueAPI.setLogManager(new SimpleLogManager());
     QueueAPI.setQueueManager(
         new TQueueManager() {
           @Override

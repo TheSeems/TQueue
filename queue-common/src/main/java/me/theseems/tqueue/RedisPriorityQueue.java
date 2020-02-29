@@ -6,6 +6,7 @@ import redis.clients.jedis.JedisPool;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public abstract class RedisPriorityQueue extends TPriorityQueue {
@@ -16,16 +17,22 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
     super();
     this.pool = pool;
     this.delay = delay;
+    this.logger = QueueAPI.logs().prefix("RedisQueue::" + getName());
 
     destinationList = new PriorityBlockingQueue<>(1, new TQueueDestinationComparator());
     handlerList = new HashMap<>();
     run();
   }
 
+  public RedisPriorityQueue(JedisPool pool, int delay, Logger logger) {
+    super(delay, logger);
+    this.pool = pool;
+  }
+
   @Override
   public void close() {
     super.close();
-    if (pool != null){
+    if (pool != null) {
       pool.destroy();
       System.out.println("Redis pool destroyed @" + getName());
     }
@@ -77,7 +84,7 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
             if (isClosed) {
               destinationList.clear();
               handlerList.clear();
-              System.out.println("Queue '" + getName() + "' shutdown");
+              logger.info("Queue '" + getName() + "' shutdown");
               break;
             } else {
               try {
@@ -89,7 +96,7 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
                   go(uuid);
                 }
               } catch (Exception e) {
-                System.out.println(
+                logger.warning(
                     "Execution exception in queue '" + getName() + "': " + e.getMessage());
               }
             }

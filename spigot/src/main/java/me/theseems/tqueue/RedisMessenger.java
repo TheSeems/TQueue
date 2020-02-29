@@ -20,15 +20,13 @@ import java.util.stream.Collectors;
 
 public class RedisMessenger implements QueueCommunicator {
   private JedisPool pool;
-  private String selfHost;
 
   public void shutdown() {
     pool.destroy();
   }
 
-  public RedisMessenger() {
-    fillSelfHost();
-    pool = new JedisPool(buildPoolConfig(), "localhost");
+  public RedisMessenger(JedisPool pool) {
+    this.pool = pool;
     Executors.newFixedThreadPool(1).submit(this::listen);
   }
 
@@ -45,36 +43,6 @@ public class RedisMessenger implements QueueCommunicator {
     }
   }
 
-  public void fillSelfHost() {
-    int port;
-    try {
-      BufferedReader is = new BufferedReader(new FileReader("server.properties"));
-      Properties props = new Properties();
-      props.load(is);
-      is.close();
-      port = Integer.parseInt(props.getProperty("server-port"));
-      String ip = props.getProperty("server-ip");
-      selfHost = (ip.isEmpty() ? "localhost" : ip) + ":" + port;
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-  }
-
-  private JedisPoolConfig buildPoolConfig() {
-    final JedisPoolConfig poolConfig = new JedisPoolConfig();
-    poolConfig.setMaxTotal(128);
-    poolConfig.setMaxIdle(128);
-    poolConfig.setMinIdle(16);
-    poolConfig.setTestOnBorrow(true);
-    poolConfig.setTestOnReturn(true);
-    poolConfig.setTestWhileIdle(true);
-    poolConfig.setMinEvictableIdleTimeMillis(Duration.ofSeconds(60).toMillis());
-    poolConfig.setTimeBetweenEvictionRunsMillis(Duration.ofSeconds(30).toMillis());
-    poolConfig.setNumTestsPerEvictionRun(3);
-    poolConfig.setBlockWhenExhausted(true);
-    return poolConfig;
-  }
-
   private Jedis get() {
     try {
       return pool.getResource();
@@ -86,32 +54,28 @@ public class RedisMessenger implements QueueCommunicator {
   public void listen() {
     Jedis jedis = get();
     jedis.subscribe(
-            new JedisPubSub() {
-              @Override
-              public void onMessage(String channel, String message) {
-                try {
-                  ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                  ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
-                  System.out.println("MSG " + message);
-                  String host = in.readUTF();
-                  System.out.println("Ours " + selfHost + " VV " + host);
+        new JedisPubSub() {
+          @Override
+          public void onMessage(String channel, String message) {
+            try {
+              System.out.println("Received " + message);
+              ByteArrayDataOutput out = ByteStreams.newDataOutput();
+              ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
 
-                  if (host.equals(selfHost)) {
-                    System.out.println("Outs!");
-                    out.writeUTF(selfHost);
-                    fillOutput(in, out);
-                    Jedis jedis = get();
-                    jedis.publish("tqueue:info:proxy", new String(out.toByteArray()));
-                    jedis.close();
-                    System.out.println("Published " + new String(out.toByteArray()));
-                  }
-                } catch (Exception e) {
-                  System.out.println("[RedisMessenger] Error while listening: " + e.getMessage());
-                  e.printStackTrace();
-                }
-              }
-            },
-            "tqueue:info:inst");
+              out.writeUTF(TQueueSpigot.getSettings().getName());
+              fillOutput(in, out);
+              Jedis jedis = get();
+              jedis.publish("tqueue:info:proxy", new String(out.toByteArray()));
+              jedis.close();
+              System.out.println("Published " + new String(out.toByteArray()));
+
+            } catch (Exception e) {
+              System.out.println("[RedisMessenger] Error while listening: " + e.getMessage());
+              e.printStackTrace();
+            }
+          }
+        },
+        "tqueue:info:" + TQueueSpigot.getSettings().getName());
   }
 
   @Override

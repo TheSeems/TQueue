@@ -36,4 +36,8 @@ public class QueueAPI {
   public static QueueLogManager logs() {
     return logManager;
   }
+
+  public static void setLogManager(QueueLogManager logManager) {
+    QueueAPI.logManager = logManager;
+  }
 }

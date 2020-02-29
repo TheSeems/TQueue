@@ -1,5 +1,7 @@
 package me.theseems.tqueue;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -13,7 +15,7 @@ public abstract class TQueueManager implements QueueManager {
   }
 
   @Override
-  public Optional<Queue> getQueue(String name) {
+  public Optional<Queue> getQueue(@NotNull String name) {
     return Optional.ofNullable(queueMap.get(name));
   }
 

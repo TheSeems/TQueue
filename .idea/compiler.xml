@@ -6,10 +6,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="api" />
+        <module name="common" />
+        <module name="bungee" />
         <module name="queue-common" />
         <module name="spigot" />
         <module name="queue-api" />
-        <module name="bungee" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
