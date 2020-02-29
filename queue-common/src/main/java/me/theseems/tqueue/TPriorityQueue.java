@@ -164,7 +164,6 @@ public abstract class TPriorityQueue implements PriorityQueue {
 
       if (next) break;
     }
-
   }
 
   public Collection<Destination> getDestinations() {
@@ -191,8 +190,14 @@ public abstract class TPriorityQueue implements PriorityQueue {
     isClosed = true;
   }
 
+  @Override
   public int getDelay() {
     return delay;
+  }
+
+  @Override
+  public void setDelay(int delay) {
+    this.delay = delay;
   }
 
   @Override

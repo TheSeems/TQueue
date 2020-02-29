@@ -24,10 +24,11 @@ public class BungeeQueueConfig {
 
   public Queue construct() {
     Queue queue = QueueAPI.getQueueManager().make(name, delay);
+    queue.setDelay(delay);
 
-    servers.forEach((s, integer) -> queue.addDestination(new ServerDestination(s, integer)));
-    if (handlers.contains("bungee-default"))
-      queue.addHandler(Utils.getDefaultHandlerFor(queue));
+    servers.forEach(
+        (server, priority) -> queue.addDestination(new ServerDestination(server, priority)));
+    if (handlers.contains("bungee-default")) queue.addHandler(Utils.getDefaultHandlerFor(queue));
     return queue;
   }
 

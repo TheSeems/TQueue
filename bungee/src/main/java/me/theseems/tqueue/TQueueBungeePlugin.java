@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Protocol;
 
 import java.io.File;
 import java.io.FileReader;
@@ -34,13 +35,12 @@ public class TQueueBungeePlugin extends Plugin {
 
   private static JedisPool generate() {
     pool =
-      new JedisPool(buildPoolConfig(), config.getRedisConfig().getHost(), config.getRedisConfig().getPort());
-
-    if (config.getRedisConfig().getPassword() != null) {
-      Jedis jedis = pool.getResource();
-      jedis.auth(config.getRedisConfig().getPassword());
-      jedis.close();
-    }
+        new JedisPool(
+            buildPoolConfig(),
+            config.getRedisConfig().getHost(),
+            config.getRedisConfig().getPort(),
+            Protocol.DEFAULT_TIMEOUT,
+            getConfig().getRedisConfig().getPassword());
     return pool;
   }
 

@@ -78,6 +78,12 @@ public interface Queue {
   int getDelay();
 
   /**
+   * Set delay of a queue
+   * @param millis milliseconds
+   */
+  void setDelay(int millis);
+
+  /**
    * Close queue
    */
   void close();
