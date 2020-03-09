@@ -1,71 +1,52 @@
 package me.theseems.tqueue;
-
 import java.util.Collection;
 import java.util.UUID;
 
 public interface Queue {
   /**
    * Get name of the queue
+   *
    * @return name
    */
   String getName();
 
   /**
    * Players there are
+   *
    * @return players
    */
   Collection<UUID> getPlayers();
 
   /**
    * Remove player from the queue
+   *
    * @param player to remove
    */
   void remove(UUID player);
 
   /**
    * Add player to the queue
+   *
    * @param player to add
    */
   void add(UUID player);
 
-  /**
-   * Get all destinations of queue
-   * @return destinations
-   */
-  Collection<Destination> getDestinations();
+  // Mapped containers for priorities, handlers and destinations
+  QueueMappedContainer<UUID, Integer> getPriorities();
 
-  /**
-   * Add destination
-   * @param destination to add
-   */
-  void addDestination(Destination destination);
+  void setPriorities(QueueMappedContainer<UUID, Integer> priorities);
 
-  /**
-   * Remove destination
-   * @param destination to remove
-   */
-  void removeDestination(Destination destination);
+  QueueMappedContainer<String, QueueHandler> getHandlers();
 
-  /**
-   * Handle certain verdict for the player
-   * @param handler target
-   */
-  void addHandler(QueueHandler handler);
+  void setHandlers(QueueMappedContainer<String, QueueHandler> handlers);
 
-  /**
-   * Remove handler by name
-   * @param name to remove
-   */
-  void removeHandler(String name);
+  QueueMappedContainer<String, Destination> getDestinations();
 
-  /**
-   * Get list of names of handlers
-   * @return handlers
-   */
-  Collection<String> getHandlers();
+  void setDestinations(QueueMappedContainer<String, Destination> destinations);
 
   /**
    * Get position of player in queue
+   *
    * @param player to get position for
    * @return position
    */
@@ -73,18 +54,18 @@ public interface Queue {
 
   /**
    * Get delay of queue
+   *
    * @return delay of actions
    */
   int getDelay();
 
   /**
    * Set delay of a queue
+   *
    * @param millis milliseconds
    */
   void setDelay(int millis);
 
-  /**
-   * Close queue
-   */
+  /** Close queue */
   void close();
 }

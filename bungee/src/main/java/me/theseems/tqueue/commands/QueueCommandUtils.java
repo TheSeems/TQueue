@@ -2,6 +2,7 @@ package me.theseems.tqueue.commands;
 
 import me.theseems.tqueue.Queue;
 import me.theseems.tqueue.QueueAPI;
+import me.theseems.tqueue.QueueHandler;
 import me.theseems.tqueue.TQueueBungeePlugin;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -11,24 +12,33 @@ import java.util.UUID;
 
 public class QueueCommandUtils {
   public static class QueueNotFoundException extends IllegalStateException {
-    private String name;
-    public QueueNotFoundException(String name) {
-      this.name = name;
-    }
+      private String name;
 
-    public String getName() {
-      return name;
-    }
+      public QueueNotFoundException(String name) {
+          this.name = name;
+      }
+
+      public String getName() {
+          return name;
+      }
   }
 
-  public static class PlayerNotFoundException extends IllegalStateException {
-    private UUID uuid;
-    private String name;
-
-    public PlayerNotFoundException(UUID uuid, String name) {
-      this.uuid = uuid;
-      this.name = name;
+    public static QueueHandler requireHandlerForQueue(Queue queue, String name) {
+        Optional<QueueHandler> handlerOptional = QueueAPI.getHandlerManager().requestFor(name, queue);
+        if (!handlerOptional.isPresent()) {
+            throw new HandlerNotFoundException(name);
+        }
+        return handlerOptional.get();
     }
+
+    public static class PlayerNotFoundException extends IllegalStateException {
+        private UUID uuid;
+        private String name;
+
+        public PlayerNotFoundException(UUID uuid, String name) {
+            this.uuid = uuid;
+            this.name = name;
+        }
 
     public UUID getUuid() {
       return uuid;
@@ -64,20 +74,32 @@ public class QueueCommandUtils {
     if (player == null) {
       throw new PlayerNotFoundException(uuid, "");
     }
-    return player;
+      return player;
   }
 
-  public static void requirePermission(CommandSender sender, String node) {
-    if (sender.hasPermission(node))
-      return;
-    throw new InsufficientPermissionsException(node);
-  }
-
-  public static ProxiedPlayer requirePlayer(String name) {
-    ProxiedPlayer player = TQueueBungeePlugin.getProxyServer().getPlayer(name);
-    if (player == null) {
-      throw new PlayerNotFoundException(null, name);
+    public static void requirePermission(CommandSender sender, String node) {
+        if (sender.hasPermission(node))
+            return;
+        throw new InsufficientPermissionsException(node);
     }
-    return player;
-  }
+
+    public static class HandlerNotFoundException extends IllegalStateException {
+        private String name;
+
+        public HandlerNotFoundException(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    public static ProxiedPlayer requirePlayer(String name) {
+        ProxiedPlayer player = TQueueBungeePlugin.getProxyServer().getPlayer(name);
+        if (player == null) {
+            throw new PlayerNotFoundException(null, name);
+        }
+        return player;
+    }
 }

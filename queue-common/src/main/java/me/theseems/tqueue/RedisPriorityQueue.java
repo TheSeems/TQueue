@@ -5,7 +5,6 @@ import redis.clients.jedis.JedisPool;
 
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -18,9 +17,6 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
     this.pool = pool;
     this.delay = delay;
     this.logger = QueueAPI.logs().prefix("RedisQueue::" + getName());
-
-    destinationList = new PriorityBlockingQueue<>(1, new TQueueDestinationComparator());
-    handlerList = new HashMap<>();
     run();
   }
 
@@ -41,10 +37,10 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
   @Override
   public void add(UUID player) {
     Jedis jedis = pool.getResource();
-    jedis.zadd(getName(), getPriority(player), player.toString());
-    jedis.close();
+    jedis.zadd(getName(), getPriorities().get(player).orElse(0), player.toString());
+      jedis.close();
 
-    handlerList.values().forEach(handler -> handler.join(player));
+      getHandlers().all().forEach(handler -> handler.onJoin(player));
   }
 
   @Override
@@ -70,7 +66,7 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
     jedis.zrem(getName(), player.toString());
     jedis.close();
 
-    handlerList.values().forEach(handler -> handler.leave(player));
+      getHandlers().all().forEach(handler -> handler.onLeave(player));
   }
 
   public void run() {
@@ -82,10 +78,10 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
                 < delay) continue;
 
             if (isClosed) {
-              destinationList.clear();
-              handlerList.clear();
-              logger.info("Queue '" + getName() + "' shutdown");
-              break;
+                getDestinations().clear();
+                getHandlers().clear();
+                logger.info("Queue '" + getName() + "' shutdown");
+                break;
             } else {
               try {
                 Jedis jedis = pool.getResource();
@@ -96,8 +92,9 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
                   go(uuid);
                 }
               } catch (Exception e) {
-                logger.warning(
-                    "Execution exception in queue '" + getName() + "': " + e.getMessage());
+                  logger.warning(
+                          "Execution exception in queue '" + getName() + "': " + e.getMessage());
+                  e.printStackTrace();
               }
             }
 

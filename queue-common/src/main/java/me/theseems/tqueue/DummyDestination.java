@@ -16,7 +16,7 @@ public class DummyDestination implements Destination {
 
   @Override
   public Future<Verdict> query(UUID user) {
-    return QueueAPI.getService().submit(() -> verdict);
+    return QueueAPI.getService().submit(() -> Verdict.OK);
   }
 
   @Override

@@ -2,11 +2,12 @@ package me.theseems.tqueue.config;
 
 import me.theseems.tqueue.Queue;
 import me.theseems.tqueue.QueueAPI;
+import me.theseems.tqueue.QueueHandler;
 import me.theseems.tqueue.ServerDestination;
-import me.theseems.tqueue.Utils;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class BungeeQueueConfig {
   private String name;
@@ -27,8 +28,16 @@ public class BungeeQueueConfig {
     queue.setDelay(delay);
 
     servers.forEach(
-        (server, priority) -> queue.addDestination(new ServerDestination(server, priority)));
-    if (handlers.contains("bungee-default")) queue.addHandler(Utils.getDefaultHandlerFor(queue));
+            (server, priority) -> queue.getDestinations().add(new ServerDestination(server, priority)));
+    for (String handler : handlers) {
+      Optional<QueueHandler> handlerOptional = QueueAPI.getHandlerManager().requestFor(handler, queue);
+      if (!handlerOptional.isPresent()) {
+        QueueAPI.logs().prefix("Config").warning("Unknown handler present for queue '" + name + "': " + handler + ". Skipping...");
+        continue;
+      }
+
+      queue.getHandlers().add(handlerOptional.get());
+    }
     return queue;
   }
 

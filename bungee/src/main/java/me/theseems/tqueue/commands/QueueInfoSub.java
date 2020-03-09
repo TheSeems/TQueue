@@ -1,61 +1,69 @@
 package me.theseems.tqueue.commands;
 
-import me.theseems.tqueue.Destination;
 import me.theseems.tqueue.Queue;
-import me.theseems.tqueue.TPriorityQueue;
 import me.theseems.tqueue.TQueueBungeePlugin;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 
-import java.util.UUID;
+import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.function.BiConsumer;
 
 public class QueueInfoSub implements SubCommand {
+
+  public static <T> String wrap(
+          Collection<T> collection, BiConsumer<StringBuilder, T> consume, String sep) {
+    StringBuilder builder = new StringBuilder();
+    for (T t : collection) {
+      consume.accept(builder, t);
+      builder.append(sep);
+    }
+    if (builder.length() >= sep.length()) {
+      builder.delete(builder.length() - sep.length(), builder.length() - 1);
+    }
+    return builder.toString();
+  }
+
+  public static <T> TextComponent namedCollection(String name, Collection<T> collection) {
+    return new TextComponent(
+            MessageFormat.format(name, collection.size())
+                    + wrap(collection, (stringBuilder, t) -> stringBuilder.append(t.toString()), ", "));
+  }
+
+  public static <T> TextComponent namedCollection(
+          String name, Collection<T> collection, BiConsumer<StringBuilder, T> consume, String sep) {
+    return new TextComponent(
+            MessageFormat.format(name, collection.size()) + wrap(collection, consume, sep));
+  }
 
   public static void sendInfo(CommandSender sender, Queue queue) {
     sender.sendMessage(new TextComponent("§7        Queue §e§l" + queue.getName() + "§r        "));
 
-    StringBuilder destBuilder = new StringBuilder();
-    for (Destination destination : queue.getDestinations()) {
-      destBuilder
-          .append(destination.getName())
-          .append(",")
-          .append(destination.getPriority())
-          .append(' ');
-    }
     sender.sendMessage(
-        new TextComponent(
-            "§eDestinations §7("
-                + queue.getDestinations().size()
-                + "): "
-                + destBuilder.toString()));
-
-    StringBuilder builder = new StringBuilder();
-    for (UUID player : queue.getPlayers()) {
-      builder
-          .append(TQueueBungeePlugin.getProxyServer().getPlayer(player).getDisplayName())
-          .append(',');
-    }
-    if (builder.length() > 0) builder.deleteCharAt(builder.length() - 1);
+            new TextComponent(
+                    namedCollection("§eDestinations §7({0}): ", queue.getDestinations().keys())));
 
     sender.sendMessage(
-        new TextComponent(
-            "§ePlayers §7(" + queue.getPlayers().size() + "): " + builder.toString()));
-
-    StringBuilder handlerBuilder = new StringBuilder();
-    for (String handler : queue.getHandlers()) {
-      handlerBuilder.append(handler).append(',').append(' ');
-    }
-    if (handlerBuilder.length() > 1) {
-      handlerBuilder.delete(handlerBuilder.length() - 2, handlerBuilder.length() - 1);
-    }
+            namedCollection(
+                    "§ePlayers §7({0}): ",
+                    queue.getPlayers(),
+                    (stringBuilder, uuid) -> {
+                      ProxiedPlayer proxiedPlayer = TQueueBungeePlugin.getProxyServer().getPlayer(uuid);
+                      String playerName;
+                      if (proxiedPlayer == null) {
+                        playerName = "uuid:" + uuid;
+                      } else {
+                        playerName = proxiedPlayer.getDisplayName();
+                      }
+                      stringBuilder.append(playerName);
+                    },
+                    ", "));
 
     sender.sendMessage(
-        new TextComponent(
-            "§eHandlers §7(" + queue.getHandlers().size() + "): " + handlerBuilder.toString()));
+            new TextComponent(namedCollection("§eHandlers §7({0}): ", queue.getHandlers().keys())));
 
-    if (queue instanceof TPriorityQueue) {
-      sender.sendMessage(new TextComponent("§eDelay: §7" + queue.getDelay()));
-    }
+    sender.sendMessage(new TextComponent("§eDelay: §7" + queue.getDelay()));
   }
 
   @Override

@@ -28,14 +28,14 @@ public abstract class TimeLimitHandler implements QueueHandler {
   public abstract void timedOut(UUID player);
 
   @Override
-  public void join(UUID player) {
-    joined.putIfAbsent(player, new Date());
+  public void onJoin(UUID player) {
+      joined.putIfAbsent(player, new Date());
   }
 
-  @Override
-  public void leave(UUID player) {
-    joined.remove(player);
-  }
+    @Override
+    public void onLeave(UUID player) {
+        joined.remove(player);
+    }
 
   public void check(UUID player) {
     Date joinDate = joined.getOrDefault(player, new Date());
@@ -46,11 +46,11 @@ public abstract class TimeLimitHandler implements QueueHandler {
     }
   }
 
-  @Override
-  public boolean apply(UUID player, Destination destination, Verdict verdict) {
-    check(player);
-    return !joined.containsKey(player);
-  }
+    @Override
+    public boolean onApply(UUID player, Destination destination, Verdict verdict) {
+        check(player);
+        return !joined.containsKey(player);
+    }
 
   @Override
   public String getName() {

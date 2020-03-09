@@ -6,30 +6,42 @@ public interface QueueHandler {
   /**
    * Apply verdict
    *
-   * @param player who received
+   * @param player      who received
    * @param destination that has given verdict
-   * @param verdict target
+   * @param verdict     target
+   * @return True if there is no need to proceed with a player to other handlers otherwise false
    */
-  default boolean apply(UUID player, Destination destination, Verdict verdict) {
-    return false;
+  default boolean onApply(UUID player, Destination destination, Verdict verdict) {
+      return false;
   }
 
-  /**
-   * On join handler
-   * @param player joined
-   */
-  default void join(UUID player) {}
+    /**
+     * On join handler
+     *
+     * @param player joined
+     */
+    default void onJoin(UUID player) {
+    }
 
-  /**
-   * On leave handler
-   * @param player left
-   */
-  default void leave(UUID player) {}
+    /**
+     * On leave handler
+     *
+     * @param player left
+     */
+    default void onLeave(UUID player) {
+    }
 
-  /**
-   * Get name of handler
-   *
-   * @return name
-   */
-  String getName();
+    /**
+     * Get name of handler
+     *
+     * @return name
+     */
+    String getName();
+
+    /**
+     * Setup a handler for a queue
+     *
+     * @param queue to setup for
+     */
+    default void setup(Queue queue) {}
 }

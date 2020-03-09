@@ -12,17 +12,17 @@ public class Utils {
   public static QueueHandler getDefaultHandlerFor(Queue queue) {
     return new QueueHandler() {
       @Override
-      public boolean apply(UUID player, Destination destination, Verdict verdict) {
-        ProxiedPlayer p = TQueueBungeePlugin.getProxyServer().getPlayer(player);
-        if (p == null) {
-          return true;
-        }
+      public boolean onApply(UUID player, Destination destination, Verdict verdict) {
+          ProxiedPlayer p = TQueueBungeePlugin.getProxyServer().getPlayer(player);
+          if (p == null) {
+              return true;
+          }
 
-        if (p.getServer() != null
-            && destination.getName().equals(p.getServer().getInfo().getName())) return false;
+          if (p.getServer() != null
+                  && destination.getName().equals(p.getServer().getInfo().getName())) return false;
 
-        if (verdict.ok) {
-          queue.remove(player);
+          if (verdict.ok) {
+              queue.remove(player);
           p.sendMessage(
               ChatMessageType.ACTION_BAR,
               new TextComponent(TQueueBungeePlugin.getConfig().get("passed")));

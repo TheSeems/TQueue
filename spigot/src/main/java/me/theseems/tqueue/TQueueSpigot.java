@@ -1,7 +1,10 @@
 package me.theseems.tqueue;
 
 import com.google.gson.GsonBuilder;
-import org.bukkit.*;
+import org.bukkit.BanEntry;
+import org.bukkit.BanList;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +15,6 @@ import redis.clients.jedis.Protocol;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -22,27 +24,20 @@ public class TQueueSpigot extends JavaPlugin {
   private static QueueCommunicator communicator;
   private static SpigotQueueConfig config;
 
-  private File prepareFile(String name) throws IOException {
-    plugin.getDataFolder().mkdir();
-    File target = new File(plugin.getDataFolder(), name);
-    if (!target.exists()) {
-      target.createNewFile();
+    private File prepareFile() throws IOException {
+        plugin.getDataFolder().mkdir();
+        File target = new File(plugin.getDataFolder(), "config.json");
+        if (!target.exists()) {
+            target.createNewFile();
+        }
+        return target;
     }
-    return target;
-  }
 
   private JedisPool buildPool() {
     final JedisPoolConfig poolConfig = new JedisPoolConfig();
     poolConfig.setMaxTotal(128);
-    poolConfig.setMaxIdle(128);
-    poolConfig.setMinIdle(16);
-    poolConfig.setTestOnBorrow(false);
-    poolConfig.setTestOnReturn(true);
-    poolConfig.setTestWhileIdle(true);
-    poolConfig.setMinEvictableIdleTimeMillis(Duration.ofSeconds(60).toMillis());
-    poolConfig.setTimeBetweenEvictionRunsMillis(Duration.ofSeconds(30).toMillis());
-    poolConfig.setNumTestsPerEvictionRun(3);
-    poolConfig.setBlockWhenExhausted(true);
+      poolConfig.setMaxIdle(128);
+      poolConfig.setMinIdle(2);
     return new JedisPool(
         poolConfig,
         config.getRedisConfig().getHost(),
@@ -53,7 +48,7 @@ public class TQueueSpigot extends JavaPlugin {
 
   private void loadConfig() {
     try {
-      File config = prepareFile("config.json");
+        File config = prepareFile();
       TQueueSpigot.config =
           new GsonBuilder().create().fromJson(new FileReader(config), SpigotQueueConfig.class);
     } catch (IOException e) {
@@ -104,9 +99,11 @@ public class TQueueSpigot extends JavaPlugin {
             BanEntry entry =
                 Bukkit.getBanList(BanList.Type.NAME).getBanEntry(offlinePlayer.getName());
             Verdict verdict = Verdict.FORBIDDEN;
-            if (entry != null) {
-              verdict.setDesc(ChatColor.stripColor(entry.getReason()));
-            }
+              if (entry != null) {
+                  verdict.setDesc(entry.getReason());
+              } else {
+                  verdict.setDesc("<FT> " + Bukkit.getBanList(BanList.Type.NAME).getBanEntries());
+              }
             return Optional.of(verdict);
           }
           return Optional.empty();

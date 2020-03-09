@@ -4,24 +4,27 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class QueueAPI {
-  // Default executor service
-  private static ExecutorService service;
+    // Default executor service
+    private static ExecutorService service;
 
-  // Queue manager for registering queues and getting information about them
-  private static QueueManager queueManager;
+    // Queue manager for registering queues and getting information about them
+    private static QueueManager queueManager;
 
-  // Log manager
-  private static QueueLogManager logManager;
+    // Log manager
+    private static QueueLogManager logManager;
 
-  public QueueAPI(int threads) {
-    setService(Executors.newFixedThreadPool(threads));
-  }
+    // Handler manager
+    private static QueueHandlerManager handlerManager;
 
-  public static ExecutorService getService() {
-    return service;
-  }
+    public QueueAPI(int threads) {
+        setService(Executors.newFixedThreadPool(threads));
+    }
 
-  public static void setService(ExecutorService service) {
+    public static ExecutorService getService() {
+        return service;
+    }
+
+    public static void setService(ExecutorService service) {
     QueueAPI.service = service;
   }
 
@@ -30,14 +33,22 @@ public class QueueAPI {
   }
 
   public static void setQueueManager(QueueManager queueManager) {
-    QueueAPI.queueManager = queueManager;
+      QueueAPI.queueManager = queueManager;
   }
 
-  public static QueueLogManager logs() {
-    return logManager;
-  }
+    public static QueueLogManager logs() {
+        return logManager;
+    }
 
-  public static void setLogManager(QueueLogManager logManager) {
-    QueueAPI.logManager = logManager;
-  }
+    public static void setLogManager(QueueLogManager logManager) {
+        QueueAPI.logManager = logManager;
+    }
+
+    public static QueueHandlerManager getHandlerManager() {
+        return handlerManager;
+    }
+
+    public static void setHandlerManager(QueueHandlerManager handlerManager) {
+        QueueAPI.handlerManager = handlerManager;
+    }
 }

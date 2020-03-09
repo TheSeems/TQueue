@@ -5,15 +5,9 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisPubSub;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.time.Duration;
 import java.util.Collection;
-import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -34,7 +28,8 @@ public class RedisMessenger implements QueueCommunicator {
     try {
       UUID uuid = UUID.fromString(in.readUTF());
       Verdict verdict = TQueueSpigot.getReplier().process(uuid);
-      out.writeBoolean(verdict.ok);
+      out.writeUTF(uuid.toString());
+        out.writeBoolean(verdict.ok);
       out.writeUTF(verdict.desc);
     } catch (Exception e) {
       e.printStackTrace();
@@ -58,12 +53,12 @@ public class RedisMessenger implements QueueCommunicator {
           @Override
           public void onMessage(String channel, String message) {
             try {
-              System.out.println("Received " + message);
               ByteArrayDataOutput out = ByteStreams.newDataOutput();
               ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
 
               out.writeUTF(TQueueSpigot.getSettings().getName());
-              fillOutput(in, out);
+                fillOutput(in, out);
+                System.out.println("Received " + message + " at " + in.readUTF());
               Jedis jedis = get();
               jedis.publish("tqueue:info:proxy", new String(out.toByteArray()));
               jedis.close();

@@ -19,26 +19,26 @@ public class TimeLimitHandlerTest {
 
     CompletableFuture<Boolean> wait = new CompletableFuture<>();
     Date joined = new Date();
-    queue.addHandler(
-        new TimeLimitHandler(100) {
-          @Override
-          public void timedOut(UUID player) {
-            wait.complete(
-                ChronoUnit.MILLIS.between(joined.toInstant(), new Date().toInstant()) >= 100);
-          }
-        });
+    queue.getHandlers().add(
+            new TimeLimitHandler(100) {
+                @Override
+                public void timedOut(UUID player) {
+                    wait.complete(
+                            ChronoUnit.MILLIS.between(joined.toInstant(), new Date().toInstant()) >= 100);
+                }
+            });
 
     queue.add(player);
-    queue.addDestination(new Destination() {
-      @Override
-      public Future<Verdict> query(UUID user) {
-        return CompletableFuture.completedFuture(Verdict.OK);
-      }
+      queue.getDestinations().add(new Destination() {
+          @Override
+          public Future<Verdict> query(UUID user) {
+              return CompletableFuture.completedFuture(Verdict.OK);
+          }
 
-      @Override
-      public int getPriority() {
-        return 0;
-      }
+          @Override
+          public int getPriority() {
+              return 0;
+          }
 
       @Override
       public String getName() {

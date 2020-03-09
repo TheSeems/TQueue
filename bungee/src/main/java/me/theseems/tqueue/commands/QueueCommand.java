@@ -1,78 +1,80 @@
 package me.theseems.tqueue.commands;
 
 import me.theseems.tqueue.TQueueBungeePlugin;
+import me.theseems.tqueue.commands.test.QueueTestSubHost;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.plugin.Command;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class QueueCommand extends Command {
-  private static Map<String, SubCommand> subs;
+public class QueueCommand extends SubHost {
 
   public QueueCommand() {
     super("queue");
-    subs = new HashMap<>();
 
     attach("add", new QueueAddSub());
     attach("create", new QueueCreateSub());
     attach("info", new QueueInfoSub());
     attach("leave", new QueueLeaveSub());
     attach("list", new QueueListSub());
-    attach("try", new QueueTrySub());
     attach("remove", new QueueRemoveSub());
     attach("kick", new QueueKickSub());
     attach("clear", new QueueClearSub());
     attach("join", new QueueJoinSub());
+    attach("test", new QueueTestSubHost());
+    attach("addh", new QueueAddHandlerSub());
+    attach("removeh", new QueueRemoveHandlerSub());
   }
 
-  public void attach(String name, SubCommand subCommand) {
-    subs.put(name, subCommand);
+  public static void sendSubs(CommandSender sender, SubHost host) {
+    AtomicInteger count = new AtomicInteger();
+    StringBuilder builder = new StringBuilder();
+    host.subs.forEach(
+            (s, subCommand) -> {
+              if ((!(sender instanceof ProxiedPlayer)) && !subCommand.allowConsole()) return;
+              if (!sender.hasPermission(subCommand.getPermission())) return;
+              builder.append(s).append(',').append(' ');
+              count.getAndIncrement();
+            });
+
+    if (builder.length() != 0) {
+      builder.delete(builder.length() - 2, builder.length() - 1);
+      sender.sendMessage(
+              new TextComponent("§6You can perform those sub commands (" + count + "):"));
+      sender.sendMessage(new TextComponent("§7" + builder.toString()));
+    } else {
+      sender.sendMessage(new TextComponent("§7There are no sub commands for you to use"));
+    }
   }
 
-  public void sendBanner(CommandSender sender) {
+  public static void sendBanner(CommandSender sender) {
     sender.sendMessage(
-        new TextComponent(
-            "§3§lTQueue §fby TheSeems<me@theseems.ru> "
-                + "§7v"
-                + TQueueBungeePlugin.getPlugin().getDescription().getVersion()));
+            new TextComponent(
+                    "§3§lTQueue §fby TheSeems<me@theseems.ru> "
+                            + "§7v"
+                            + TQueueBungeePlugin.getPlugin().getDescription().getVersion()));
+
   }
 
   @Override
-  public void execute(CommandSender sender, String[] args) {
-    if (args.length == 0
-        || !subs.containsKey(args[0])
-        || sender instanceof ProxiedPlayer
-            && !sender.hasPermission(subs.get(args[0]).getPermission())) {
-      sendBanner(sender);
+  public void onNotFound(CommandSender sender) {
+    sendBanner(sender);
+  }
+
+  @Override
+  public void onPermissionLack(CommandSender sender, String node) {
+    sendBanner(sender);
+  }
+
+  @Override
+  public void execute(CommandSender commandSender, String[] strings) {
+    if (Objects.equals(strings[0], "subs")) {
+      sendSubs(commandSender, this);
       return;
     }
 
-    String next = args[0];
-    args = Arrays.copyOfRange(args, 1, args.length);
-    try {
-      SubCommand command = subs.get(next);
-      if (!command.allowConsole() && !(sender instanceof ProxiedPlayer)) {
-        sender.sendMessage(new TextComponent("§7Sorry.. but§c command is unavailable for you"));
-        return;
-      }
-
-      command.pass(sender, args);
-    } catch (QueueCommandUtils.PlayerNotFoundException e) {
-      sender.sendMessage(new TextComponent("§cPlayer §7'" + e.getName() + "'§c not found"));
-    } catch (QueueCommandUtils.QueueNotFoundException e) {
-      sender.sendMessage(new TextComponent("§cQueue §7'" + e.getName() + "'§c not found"));
-    } catch (QueueCommandUtils.InsufficientPermissionsException e) {
-      sendBanner(sender);
-    } catch (Exception e) {
-      sender.sendMessage(
-          new TextComponent(
-              "§7Sorry.. we have a problem executing this command: §c" + e.getMessage()));
-      sender.sendMessage(new TextComponent("§7Try again later..."));
-      e.printStackTrace();
-    }
+    propagate(commandSender, strings);
   }
 }

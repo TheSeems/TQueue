@@ -1,7 +1,9 @@
-package me.theseems.tqueue.commands;
+package me.theseems.tqueue.commands.test;
 
 import me.theseems.tqueue.TQueueBungeePlugin;
 import me.theseems.tqueue.Verdict;
+import me.theseems.tqueue.commands.QueueCommandUtils;
+import me.theseems.tqueue.commands.SubCommand;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.config.ServerInfo;
@@ -12,17 +14,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class QueueTrySub implements SubCommand {
-  @Override
-  public void pass(CommandSender sender, String[] args) {
-    if (args.length == 0) {
-      sender.sendMessage(
-          new TextComponent(
-              "§cSpecify the name of server to test (and optionally player in first argument to test for them)"));
-      return;
-    }
+public class QueueTestReachSub implements SubCommand {
+    @Override
+    public void pass(CommandSender sender, String[] args) {
+        if (args.length == 0) {
+            sender.sendMessage(
+                    new TextComponent(
+                            "§cSpecify the (optionally player) and name of server to test"));
+            return;
+        }
 
-    String playerName;
+        String playerName;
     String serverName;
     if (args.length >= 2) {
       playerName = args[0];
@@ -46,18 +48,17 @@ public class QueueTrySub implements SubCommand {
 
     Verdict result;
     try {
-      result = future.get(5, TimeUnit.SECONDS);
-      sender.sendMessage(
-        new TextComponent("§aRequest succeed: " + result.ok + " " + result.desc + " §7(" + result + ")"));
+        result = future.get(5, TimeUnit.SECONDS);
+        sender.sendMessage(
+                new TextComponent(
+                        "§6Response received: §7" + result.ok + " " + result.desc + " §7(" + result + ": " + result.desc + ")"));
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       sender.sendMessage(new TextComponent("§cRequest failed: §7" + e.getMessage()));
     }
-
-
   }
 
   @Override
   public String getPermission() {
-    return "queue.try";
+      return "queue.test.try";
   }
 }
