@@ -24,10 +24,10 @@ public class QueueAddSub implements SubCommand {
       return;
     }
 
-    String qName = args[1];
-    Optional<Queue> queueOptional = QueueAPI.getQueueManager().getQueue(qName);
+    String queueName = args[1];
+    Optional<Queue> queueOptional = QueueAPI.getQueueManager().getQueue(queueName);
     if (!queueOptional.isPresent()) {
-      sender.sendMessage(new TextComponent("§cThere's no queue with name §7'" + qName + "'"));
+      sender.sendMessage(new TextComponent("§cThere's no queue with name §7'" + queueName + "'"));
       return;
     }
 

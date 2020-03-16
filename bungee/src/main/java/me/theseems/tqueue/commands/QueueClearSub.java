@@ -22,8 +22,8 @@ public class QueueClearSub implements SubCommand {
     }
 
     sender.sendMessage(
-        new TextComponent(
-            "§aKicked §7" + kickedCounter + "§a player(s) from queue §7'" + queue.getName() + "'"));
+      new TextComponent(
+        "§aKicked §7" + kickedCounter + "§a player(s) from queue §7'" + queue.getName() + "'"));
   }
 
   @Override
