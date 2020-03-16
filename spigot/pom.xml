@@ -5,7 +5,7 @@
     <parent>
         <artifactId>TQueue</artifactId>
         <groupId>me.theseems</groupId>
-        <version>1.0-SNAPSHOT</version>
+        <version>0.1D</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -80,14 +80,14 @@
         <dependency>
             <groupId>me.theseems</groupId>
             <artifactId>api</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.1D</version>
             <scope>compile</scope>
             <type>jar</type>
         </dependency>
         <dependency>
             <groupId>me.theseems</groupId>
             <artifactId>common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.1D</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
