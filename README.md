@@ -29,18 +29,18 @@ Players will join hub2 until it's full if there is no special destination contai
 `/queue removeh <handler>` - remove handler from a queue
 
 ## Installation
-From here: https://github.com/TheSeems/TQueue/releases/tag/0.1D
-Download TQueueBungee-...jar and put it in the bungeecord plugins folder
-Download TQueueSpigot-...jar and put it in the spigot/bukkit plugins folder
+From here: https://github.com/TheSeems/TQueue/releases/tag/0.1D  
+Download TQueueBungee-...jar and put it in the bungeecord plugins folder  
+Download TQueueSpigot-...jar and put it in the spigot/bukkit plugins folder  
 
-Configure your redis server and fill in configs for both bungee and spigot.
+Configure your redis server and fill in configs for both bungee and spigot.  
 
 ## Sample configs
-For spigot (plugins/TQueue/config.json):
-https://gist.github.com/TheSeems/ed180d964112f2e78f95a460d7d81c65
+For spigot (plugins/TQueue/config.json):  
+https://gist.github.com/TheSeems/ed180d964112f2e78f95a460d7d81c65  
 
-For bungee (plugins/TQueue/config.json):
-https://gist.github.com/TheSeems/44d2bd4344002277aa2169a61e8fd86d
+For bungee (plugins/TQueue/config.json):  
+https://gist.github.com/TheSeems/44d2bd4344002277aa2169a61e8fd86d  
 
 ## API
 ### Creating a queue (with registration)
