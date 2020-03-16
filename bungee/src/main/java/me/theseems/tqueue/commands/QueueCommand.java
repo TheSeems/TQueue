@@ -6,7 +6,6 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class QueueCommand extends SubHost {
@@ -70,7 +69,7 @@ public class QueueCommand extends SubHost {
 
   @Override
   public void execute(CommandSender commandSender, String[] strings) {
-    if (Objects.equals(strings[0], "subs")) {
+    if (strings.length != 0 && strings[0].equals("subs")) {
       sendSubs(commandSender, this);
       return;
     }
