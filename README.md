@@ -1,5 +1,6 @@
 # TQueue
 A simple queue system in minecraft  
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/596992c399e9467fbc1910ca84b6e294)](https://app.codacy.com/manual/TheSeems/TQueue?utm_source=github.com&utm_medium=referral&utm_content=TheSeems/TQueue&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.com/TheSeems/TQueue.svg?branch=master)](https://travis-ci.com/TheSeems/TQueue)
 
 ## What is it for
