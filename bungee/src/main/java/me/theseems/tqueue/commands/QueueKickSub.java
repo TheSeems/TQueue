@@ -17,12 +17,12 @@ public class QueueKickSub implements SubCommand {
 
     queue.remove(player.getUniqueId());
     sender.sendMessage(
-        new TextComponent(
-            "§aKicked player §7'"
-                + player.getName()
-                + "'§a from queue §7'"
-                + queue.getName()
-                + "'"));
+      new TextComponent(
+        "§aKicked player §7'"
+          + player.getName()
+          + "'§a from queue §7'"
+          + queue.getName()
+          + "'"));
   }
 
   @Override

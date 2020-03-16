@@ -13,38 +13,38 @@ public class Utils {
     return new QueueHandler() {
       @Override
       public boolean onApply(UUID player, Destination destination, Verdict verdict) {
-          ProxiedPlayer p = TQueueBungeePlugin.getProxyServer().getPlayer(player);
-          if (p == null) {
-              return true;
-          }
+        ProxiedPlayer p = TQueueBungeePlugin.getProxyServer().getPlayer(player);
+        if (p == null) {
+          return true;
+        }
 
-          if (p.getServer() != null
-                  && destination.getName().equals(p.getServer().getInfo().getName())) return false;
+        if (p.getServer() != null
+          && destination.getName().equals(p.getServer().getInfo().getName())) return false;
 
-          if (verdict.ok) {
-              queue.remove(player);
+        if (verdict.ok) {
+          queue.remove(player);
           p.sendMessage(
-              ChatMessageType.ACTION_BAR,
-              new TextComponent(TQueueBungeePlugin.getConfig().get("passed")));
+            ChatMessageType.ACTION_BAR,
+            new TextComponent(TQueueBungeePlugin.getConfig().get("passed")));
           p.connect(
-              TQueueBungeePlugin.getProxyServer().getServerInfo(destination.getName()),
-              ServerConnectEvent.Reason.PLUGIN);
+            TQueueBungeePlugin.getProxyServer().getServerInfo(destination.getName()),
+            ServerConnectEvent.Reason.PLUGIN);
           return true;
         } else {
           p.sendMessage(
-              ChatMessageType.ACTION_BAR,
-              new TextComponent(
-                  MessageFormat.format(
-                      TQueueBungeePlugin.getConfig().get("status"),
-                      queue.getPosition(player),
-                      queue.getPlayers().size())));
+            ChatMessageType.ACTION_BAR,
+            new TextComponent(
+              MessageFormat.format(
+                TQueueBungeePlugin.getConfig().get("status"),
+                queue.getPosition(player),
+                queue.getPlayers().size())));
           p.sendMessage(
-              ChatMessageType.CHAT,
-              new TextComponent(
-                  MessageFormat.format(
-                      TQueueBungeePlugin.getConfig().get("verdict"),
-                      verdict.name(),
-                      verdict.desc)));
+            ChatMessageType.CHAT,
+            new TextComponent(
+              MessageFormat.format(
+                TQueueBungeePlugin.getConfig().get("verdict"),
+                verdict.name(),
+                verdict.desc)));
           return false;
         }
       }

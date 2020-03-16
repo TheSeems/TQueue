@@ -31,17 +31,17 @@ public class QueueCommand extends SubHost {
     AtomicInteger count = new AtomicInteger();
     StringBuilder builder = new StringBuilder();
     host.subs.forEach(
-            (s, subCommand) -> {
-              if ((!(sender instanceof ProxiedPlayer)) && !subCommand.allowConsole()) return;
-              if (!sender.hasPermission(subCommand.getPermission())) return;
-              builder.append(s).append(',').append(' ');
-              count.getAndIncrement();
-            });
+      (s, subCommand) -> {
+        if ((!(sender instanceof ProxiedPlayer)) && !subCommand.allowConsole()) return;
+        if (!sender.hasPermission(subCommand.getPermission())) return;
+        builder.append(s).append(',').append(' ');
+        count.getAndIncrement();
+      });
 
     if (builder.length() != 0) {
       builder.delete(builder.length() - 2, builder.length() - 1);
       sender.sendMessage(
-              new TextComponent("§6You can perform those sub commands (" + count + "):"));
+        new TextComponent("§6You can perform those sub commands (" + count + "):"));
       sender.sendMessage(new TextComponent("§7" + builder.toString()));
     } else {
       sender.sendMessage(new TextComponent("§7There are no sub commands for you to use"));
@@ -50,10 +50,10 @@ public class QueueCommand extends SubHost {
 
   public static void sendBanner(CommandSender sender) {
     sender.sendMessage(
-            new TextComponent(
-                    "§3§lTQueue §fby TheSeems<me@theseems.ru> "
-                            + "§7v"
-                            + TQueueBungeePlugin.getPlugin().getDescription().getVersion()));
+      new TextComponent(
+        "§3§lTQueue §fby TheSeems<me@theseems.ru> "
+          + "§7v"
+          + TQueueBungeePlugin.getPlugin().getDescription().getVersion()));
 
   }
 

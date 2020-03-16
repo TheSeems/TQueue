@@ -1,4 +1,5 @@
 package me.theseems.tqueue;
+
 import java.util.Collection;
 import java.util.UUID;
 
@@ -31,17 +32,46 @@ public interface Queue {
    */
   void add(UUID player);
 
-  // Mapped containers for priorities, handlers and destinations
+  /**
+   * Get priorities container
+   *
+   * @return priorities
+   */
   QueueMappedContainer<UUID, Integer> getPriorities();
 
+  /**
+   * Set priority container
+   *
+   * @param priorities to set
+   */
   void setPriorities(QueueMappedContainer<UUID, Integer> priorities);
 
+  /**
+   * Get handlers container
+   *
+   * @return handlers container
+   */
   QueueMappedContainer<String, QueueHandler> getHandlers();
 
+  /**
+   * Set handlers container
+   *
+   * @param handlers to set
+   */
   void setHandlers(QueueMappedContainer<String, QueueHandler> handlers);
 
+  /**
+   * Get destinations container
+   *
+   * @return destinations container
+   */
   QueueMappedContainer<String, Destination> getDestinations();
 
+  /**
+   * Set destinations container
+   *
+   * @param destinations to set
+   */
   void setDestinations(QueueMappedContainer<String, Destination> destinations);
 
   /**
@@ -66,6 +96,8 @@ public interface Queue {
    */
   void setDelay(int millis);
 
-  /** Close queue */
+  /**
+   * Close queue
+   */
   void close();
 }

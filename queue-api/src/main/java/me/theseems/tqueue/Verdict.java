@@ -16,6 +16,7 @@ public enum Verdict {
     this.desc = desc;
   }
 
+  // Set custom description of verdict
   public void setDesc(String desc) {
     this.desc = desc;
   }

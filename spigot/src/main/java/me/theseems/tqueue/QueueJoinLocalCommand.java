@@ -10,13 +10,13 @@ import org.jetbrains.annotations.NotNull;
 public class QueueJoinLocalCommand implements CommandExecutor {
   @Override
   public boolean onCommand(
-      CommandSender sender,
-      @NotNull Command command,
-      @NotNull String label,
-      @NotNull String[] args) {
+    CommandSender sender,
+    @NotNull Command command,
+    @NotNull String label,
+    @NotNull String[] args) {
     if (!sender.hasPermission("tqueue.local.join")
-        || args.length == 0
-        || !sender.hasPermission("tqueue.local.join." + args[0])) return false;
+      || args.length == 0
+      || !sender.hasPermission("tqueue.local.join." + args[0])) return false;
 
     if (sender instanceof ConsoleCommandSender) {
       sender.sendMessage("This command is not available for Console.");

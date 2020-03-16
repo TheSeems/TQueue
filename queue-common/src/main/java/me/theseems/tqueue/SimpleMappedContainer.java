@@ -13,7 +13,7 @@ public abstract class SimpleMappedContainer<N, T> implements QueueMappedContaine
     }
 
     @Override
-    public Collection<T> all() {
+    public Collection<T> values() {
         return map.values();
     }
 

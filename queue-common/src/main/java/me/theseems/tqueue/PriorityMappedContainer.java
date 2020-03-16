@@ -14,21 +14,21 @@ public abstract class PriorityMappedContainer<N, T> implements QueueMappedContai
 
     public PriorityMappedContainer() {
         Comparator<NamedEntry> comparator =
-                (namedEntry, t1) -> {
-                    if (namedEntry.name.equals(t1.name)) return 0;
+          (namedEntry, t1) -> {
+              if (namedEntry.name.equals(t1.name)) return 0;
 
-                    int priorityFirst = getPriority(namedEntry.name, namedEntry.value);
-                    int prioritySecond = getPriority(namedEntry.name, namedEntry.value);
-                    if (priorityFirst != prioritySecond) {
-                        return Integer.compare(prioritySecond, priorityFirst);
-                    }
-                    return 1;
-                };
+              int priorityFirst = getPriority(namedEntry.name, namedEntry.value);
+              int prioritySecond = getPriority(namedEntry.name, namedEntry.value);
+              if (priorityFirst != prioritySecond) {
+                  return Integer.compare(prioritySecond, priorityFirst);
+              }
+              return 1;
+          };
         map = new TreeMap<>(comparator);
     }
 
     @Override
-    public Collection<T> all() {
+    public Collection<T> values() {
         return map.values();
     }
 

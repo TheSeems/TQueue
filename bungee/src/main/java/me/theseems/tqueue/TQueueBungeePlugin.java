@@ -35,11 +35,11 @@ public class TQueueBungeePlugin extends Plugin {
 
   private static JedisPool generate() {
     return new JedisPool(
-            buildPoolConfig(),
-            config.getRedisConfig().getHost(),
-            config.getRedisConfig().getPort(),
-            Protocol.DEFAULT_TIMEOUT,
-            getConfig().getRedisConfig().getPassword());
+      buildPoolConfig(),
+      config.getRedisConfig().getHost(),
+      config.getRedisConfig().getPort(),
+      Protocol.DEFAULT_TIMEOUT,
+      getConfig().getRedisConfig().getPassword());
   }
 
   private static File initConfig() {
@@ -62,21 +62,21 @@ public class TQueueBungeePlugin extends Plugin {
 
       Map<String, Integer> servers = new HashMap<>();
 
-      for (Destination destination : queue.getDestinations().all()) {
+      for (Destination destination : queue.getDestinations().values()) {
         if (destination instanceof ServerDestination)
           servers.put(destination.getName(), destination.getPriority());
         else {
           QueueAPI.logs().get()
-                  .warning("Found non-bungee destination '" + destination.getName() + "', skipping it");
+            .warning("Found non-bungee destination '" + destination.getName() + "', skipping it");
         }
       }
 
       BungeeQueueConfig config =
-              new BungeeQueueConfig(
-                      queue.getName(),
-                      queue.getDelay(),
-                      servers,
-                      new ArrayList<>(queue.getHandlers().keys()));
+        new BungeeQueueConfig(
+          queue.getName(),
+          queue.getDelay(),
+          servers,
+          new ArrayList<>(queue.getHandlers().keys()));
       configList.add(config);
     }
 
@@ -99,16 +99,16 @@ public class TQueueBungeePlugin extends Plugin {
       getLogger().info("Loaded config from file");
     } catch (IOException e) {
       config =
-              new QueuePluginConfig(
-                      new HashMap<>() {
-                        {
-                          put("status", "§7Queued: {0}/{1}");
-                          put("passed", "§aQueue passed");
-                          put("verdict", "§7Queue: {0} | {1}");
-                        }
-                      },
-                      new HashMap<>(),
-                      new ArrayList<>());
+        new QueuePluginConfig(
+          new HashMap<>() {
+            {
+              put("status", "§7Queued: {0}/{1}");
+              put("passed", "§aQueue passed");
+              put("verdict", "§7Queue: {0} | {1}");
+            }
+          },
+          new HashMap<>(),
+          new ArrayList<>());
 
       config.setRedisConfig(new RedisConfig("localhost", 6379, null));
 
@@ -119,8 +119,8 @@ public class TQueueBungeePlugin extends Plugin {
         getLogger().info("Created example config");
       } catch (IOException ex) {
         getLogger()
-                .warning(
-                        "Cannot write example config. Using NULL (!) one. You will experience issues!");
+          .warning(
+            "Cannot write example config. Using NULL (!) one. You will experience issues!");
         ex.printStackTrace();
       }
       getLogger().warning("Cannot setup config from file");
@@ -134,7 +134,7 @@ public class TQueueBungeePlugin extends Plugin {
     for (BungeeQueueConfig queueConfig : config.getQueues()) {
       if (QueueAPI.getQueueManager().getQueue(queueConfig.getName()).isPresent()) {
         getLogger()
-                .warning("Queue '" + queueConfig.getName() + "' from config already exists in manager");
+          .warning("Queue '" + queueConfig.getName() + "' from config already exists in manager");
         continue;
       }
 
@@ -176,35 +176,35 @@ public class TQueueBungeePlugin extends Plugin {
     });
 
     QueueAPI.setQueueManager(
-            new TQueueManager() {
+      new TQueueManager() {
+        @Override
+        public RedisPriorityQueue make(@NotNull String name, int delay) {
+          RedisPriorityQueue queue =
+            new RedisPriorityQueue(generate(), delay) {
               @Override
-              public RedisPriorityQueue make(@NotNull String name, int delay) {
-                RedisPriorityQueue queue =
-                        new RedisPriorityQueue(generate(), delay) {
-                          @Override
-                          public String getName() {
-                            return name;
-                          }
-                        };
-
-                queue.setDestinations(new LeastOnlineDestinationContainer());
-                queue.setHandlers(
-                        new SimpleMappedContainer<>() {
-                          @Override
-                          public void add(QueueHandler value) {
-                            this.add(value.getName(), value);
-                          }
-                        });
-                queue.setPriorities(
-                        new SimpleMappedContainer<>() {
-                          @Override
-                          public void add(Integer value) {
-                            throw new IllegalStateException("Adding priority nowhere is not supported");
-                          }
-                        });
-                return queue;
+              public String getName() {
+                return name;
               }
-        });
+            };
+
+          queue.setDestinations(new LeastOnlineDestinationContainer());
+          queue.setHandlers(
+            new SimpleMappedContainer<>() {
+              @Override
+              public void add(QueueHandler value) {
+                this.add(value.getName(), value);
+              }
+            });
+          queue.setPriorities(
+            new SimpleMappedContainer<>() {
+              @Override
+              public void add(Integer value) {
+                throw new IllegalStateException("Adding priority nowhere is not supported");
+              }
+            });
+          return queue;
+        }
+      });
     getLogger().info("Queue API set up");
 
     getLogger().info("Registering messenger");

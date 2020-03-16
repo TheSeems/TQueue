@@ -6,14 +6,14 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
 
 public class QueueTestSaveConfigSub implements SubCommand {
-    @Override
-    public void pass(CommandSender sender, String[] args) {
-        TQueueBungeePlugin.saveConfig();
-        sender.sendMessage(new TextComponent("§aOK"));
-    }
+  @Override
+  public void pass(CommandSender sender, String[] args) {
+    TQueueBungeePlugin.saveConfig();
+    sender.sendMessage(new TextComponent("§aOK"));
+  }
 
-    @Override
-    public String getPermission() {
-        return "queue.test.config.save";
-    }
+  @Override
+  public String getPermission() {
+    return "queue.test.config.save";
+  }
 }

@@ -23,11 +23,11 @@ public abstract class TQueueManager implements QueueManager {
   public void register(Queue queue) {
     if (queueMap.containsKey(queue.getName())) {
       throw new IllegalStateException(
-          "An attempt to register queue with existing in system name: "
-              + "new="
-              + queue
-              + ", old="
-              + queueMap.get(queue.getName()));
+        "An attempt to register queue with existing in system name: "
+          + "new="
+          + queue
+          + ", old="
+          + queueMap.get(queue.getName()));
     }
 
     System.out.println("Registered queue with name " + queue.getName());

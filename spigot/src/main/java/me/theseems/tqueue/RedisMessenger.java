@@ -29,7 +29,7 @@ public class RedisMessenger implements QueueCommunicator {
       UUID uuid = UUID.fromString(in.readUTF());
       Verdict verdict = TQueueSpigot.getReplier().process(uuid);
       out.writeUTF(uuid.toString());
-        out.writeBoolean(verdict.ok);
+      out.writeBoolean(verdict.ok);
       out.writeUTF(verdict.desc);
     } catch (Exception e) {
       e.printStackTrace();
@@ -49,28 +49,28 @@ public class RedisMessenger implements QueueCommunicator {
   public void listen() {
     Jedis jedis = get();
     jedis.subscribe(
-        new JedisPubSub() {
-          @Override
-          public void onMessage(String channel, String message) {
-            try {
-              ByteArrayDataOutput out = ByteStreams.newDataOutput();
-              ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
+      new JedisPubSub() {
+        @Override
+        public void onMessage(String channel, String message) {
+          try {
+            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            ByteArrayDataInput in = ByteStreams.newDataInput(message.getBytes());
 
-              out.writeUTF(TQueueSpigot.getSettings().getName());
-                fillOutput(in, out);
-                System.out.println("Received " + message + " at " + in.readUTF());
-              Jedis jedis = get();
-              jedis.publish("tqueue:info:proxy", new String(out.toByteArray()));
-              jedis.close();
-              System.out.println("Published " + new String(out.toByteArray()));
+            out.writeUTF(TQueueSpigot.getSettings().getName());
+            fillOutput(in, out);
+            System.out.println("Received " + message + " at " + in.readUTF());
+            Jedis jedis = get();
+            jedis.publish("tqueue:info:proxy", new String(out.toByteArray()));
+            jedis.close();
+            System.out.println("Published " + new String(out.toByteArray()));
 
-            } catch (Exception e) {
-              System.out.println("[RedisMessenger] Error while listening: " + e.getMessage());
-              e.printStackTrace();
-            }
+          } catch (Exception e) {
+            System.out.println("[RedisMessenger] Error while listening: " + e.getMessage());
+            e.printStackTrace();
           }
-        },
-        "tqueue:info:" + TQueueSpigot.getSettings().getName());
+        }
+      },
+      "tqueue:info:" + TQueueSpigot.getSettings().getName());
   }
 
   @Override

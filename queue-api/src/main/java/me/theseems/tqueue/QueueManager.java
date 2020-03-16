@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface QueueManager {
   /**
    * Get queue by name
+   *
    * @param name of queue
    * @return optional of queue
    */
@@ -15,24 +16,28 @@ public interface QueueManager {
 
   /**
    * Register queue to manager
+   *
    * @param queue to register
    */
   void register(Queue queue);
 
   /**
    * Remove queue from manager
+   *
    * @param queue to unregister
    */
   void unregister(Queue queue);
 
   /**
    * Get all queues there are
+   *
    * @return queue list
    */
   Collection<Queue> getQueues();
 
   /**
    * Make queue (using default in system)
+   *
    * @param name of queue
    * @return queue
    */

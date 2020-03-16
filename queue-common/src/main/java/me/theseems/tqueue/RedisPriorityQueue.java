@@ -38,9 +38,9 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
   public void add(UUID player) {
     Jedis jedis = pool.getResource();
     jedis.zadd(getName(), getPriorities().get(player).orElse(0), player.toString());
-      jedis.close();
+    jedis.close();
 
-      getHandlers().all().forEach(handler -> handler.onJoin(player));
+    getHandlers().values().forEach(handler -> handler.onJoin(player));
   }
 
   @Override
@@ -66,41 +66,41 @@ public abstract class RedisPriorityQueue extends TPriorityQueue {
     jedis.zrem(getName(), player.toString());
     jedis.close();
 
-      getHandlers().all().forEach(handler -> handler.onLeave(player));
+    getHandlers().values().forEach(handler -> handler.onLeave(player));
   }
 
   public void run() {
     Runnable runnable =
-        () -> {
-          Date latest = new Date();
-          while (true) {
-            if (ChronoUnit.MILLIS.between(latest.toInstant(), Calendar.getInstance().toInstant())
-                < delay) continue;
+      () -> {
+        Date latest = new Date();
+        while (true) {
+          if (ChronoUnit.MILLIS.between(latest.toInstant(), Calendar.getInstance().toInstant())
+            < delay) continue;
 
-            if (isClosed) {
-                getDestinations().clear();
-                getHandlers().clear();
-                logger.info("Queue '" + getName() + "' shutdown");
-                break;
-            } else {
-              try {
-                Jedis jedis = pool.getResource();
-                Set<String> response = jedis.zrange(getName(), 0, -1);
-                jedis.close();
-                for (String s : response) {
-                  UUID uuid = UUID.fromString(s);
-                  go(uuid);
-                }
-              } catch (Exception e) {
-                  logger.warning(
-                          "Execution exception in queue '" + getName() + "': " + e.getMessage());
-                  e.printStackTrace();
+          if (isClosed) {
+            getDestinations().clear();
+            getHandlers().clear();
+            logger.info("Queue '" + getName() + "' shutdown");
+            break;
+          } else {
+            try {
+              Jedis jedis = pool.getResource();
+              Set<String> response = jedis.zrange(getName(), 0, -1);
+              jedis.close();
+              for (String s : response) {
+                UUID uuid = UUID.fromString(s);
+                go(uuid);
               }
+            } catch (Exception e) {
+              logger.warning(
+                "Execution exception in queue '" + getName() + "': " + e.getMessage());
+              e.printStackTrace();
             }
-
-            latest = new Date();
           }
-        };
+
+          latest = new Date();
+        }
+      };
 
     QueueAPI.getService().submit(runnable);
   }

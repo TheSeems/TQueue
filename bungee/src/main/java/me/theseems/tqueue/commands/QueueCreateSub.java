@@ -16,16 +16,16 @@ public class QueueCreateSub implements SubCommand {
   public void pass(CommandSender sender, String[] args) {
     if (args.length < 2) {
       sender.sendMessage(
-              new TextComponent("§cYou have to specify the queue's name and destination servers"));
+        new TextComponent("§cYou have to specify the queue's name and destination servers"));
       return;
     }
 
     String name = args[0];
     Optional<Queue> optionalQueue = QueueAPI.getQueueManager().getQueue(name);
     if (optionalQueue.isPresent()) {
-        sendInfo(sender, optionalQueue.get());
-        sender.sendMessage(
-                new TextComponent("§6§l↑ §cQueue with name §7'" + name + "'§c already exist"));
+      sendInfo(sender, optionalQueue.get());
+      sender.sendMessage(
+        new TextComponent("§6§l↑ §cQueue with name §7'" + name + "'§c already exist"));
       return;
     }
 
@@ -35,8 +35,8 @@ public class QueueCreateSub implements SubCommand {
       String newDestination = args[i];
       String[] list = newDestination.split(",");
       if (list.length < 2) {
-          sender.sendMessage(new TextComponent("§cWrong format!§7 Expected <name>,<priority>"));
-          sender.sendMessage(new TextComponent("§8Example /queue create first lobby1,10 lobby2,20"));
+        sender.sendMessage(new TextComponent("§cWrong format!§7 Expected <name>,<priority>"));
+        sender.sendMessage(new TextComponent("§8Example /queue create first lobby1,10 lobby2,20"));
         return;
       }
 
@@ -44,16 +44,16 @@ public class QueueCreateSub implements SubCommand {
       try {
         priority = Integer.parseInt(list[1]);
       } catch (NumberFormatException e) {
-          sender.sendMessage(
-                  new TextComponent("§cCannot read a number§7 from this: '" + list[1] + "'"));
+        sender.sendMessage(
+          new TextComponent("§cCannot read a number§7 from this: '" + list[1] + "'"));
         return;
       }
 
-        queue.getDestinations().add(new ServerDestination(list[0], priority));
+      queue.getDestinations().add(new ServerDestination(list[0], priority));
     }
 
-      queue.getHandlers().add(Utils.getDefaultHandlerFor(queue));
-      QueueAPI.getQueueManager().register(queue);
+    queue.getHandlers().add(Utils.getDefaultHandlerFor(queue));
+    QueueAPI.getQueueManager().register(queue);
     sendInfo(sender, queue);
   }
 

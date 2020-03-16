@@ -25,23 +25,23 @@ public class ServerDestination implements Destination, Listener {
 
   public Future<Verdict> query(UUID user) {
     return QueueAPI.getService()
-        .submit(
-            () -> {
-              ProxyServer server = TQueueBungeePlugin.getProxyServer();
-              ServerInfo info = server.getServerInfo(getName());
-              if (info == null) {
-                return Verdict.FORBIDDEN;
-              }
+      .submit(
+        () -> {
+          ProxyServer server = TQueueBungeePlugin.getProxyServer();
+          ServerInfo info = server.getServerInfo(getName());
+          if (info == null) {
+            return Verdict.FORBIDDEN;
+          }
 
-              ProxiedPlayer player = TQueueBungeePlugin.getProxyServer().getPlayer(user);
-              if (player == null) {
-                return Verdict.FORBIDDEN;
-              }
+          ProxiedPlayer player = TQueueBungeePlugin.getProxyServer().getPlayer(user);
+          if (player == null) {
+            return Verdict.FORBIDDEN;
+          }
 
-              return TQueueBungeePlugin.getMessenger()
-                  .requestUser(getName(), user)
-                  .get(3, TimeUnit.SECONDS);
-            });
+          return TQueueBungeePlugin.getMessenger()
+            .requestUser(getName(), user)
+            .get(3, TimeUnit.SECONDS);
+        });
   }
 
   @Override

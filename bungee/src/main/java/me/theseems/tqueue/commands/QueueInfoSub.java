@@ -13,7 +13,7 @@ import java.util.function.BiConsumer;
 public class QueueInfoSub implements SubCommand {
 
   public static <T> String wrap(
-          Collection<T> collection, BiConsumer<StringBuilder, T> consume, String sep) {
+    Collection<T> collection, BiConsumer<StringBuilder, T> consume, String sep) {
     StringBuilder builder = new StringBuilder();
     for (T t : collection) {
       consume.accept(builder, t);
@@ -27,41 +27,41 @@ public class QueueInfoSub implements SubCommand {
 
   public static <T> TextComponent namedCollection(String name, Collection<T> collection) {
     return new TextComponent(
-            MessageFormat.format(name, collection.size())
-                    + wrap(collection, (stringBuilder, t) -> stringBuilder.append(t.toString()), ", "));
+      MessageFormat.format(name, collection.size())
+        + wrap(collection, (stringBuilder, t) -> stringBuilder.append(t.toString()), ", "));
   }
 
   public static <T> TextComponent namedCollection(
-          String name, Collection<T> collection, BiConsumer<StringBuilder, T> consume, String sep) {
+    String name, Collection<T> collection, BiConsumer<StringBuilder, T> consume, String sep) {
     return new TextComponent(
-            MessageFormat.format(name, collection.size()) + wrap(collection, consume, sep));
+      MessageFormat.format(name, collection.size()) + wrap(collection, consume, sep));
   }
 
   public static void sendInfo(CommandSender sender, Queue queue) {
     sender.sendMessage(new TextComponent("§7        Queue §e§l" + queue.getName() + "§r        "));
 
     sender.sendMessage(
-            new TextComponent(
-                    namedCollection("§eDestinations §7({0}): ", queue.getDestinations().keys())));
+      new TextComponent(
+        namedCollection("§eDestinations §7({0}): ", queue.getDestinations().keys())));
 
     sender.sendMessage(
-            namedCollection(
-                    "§ePlayers §7({0}): ",
-                    queue.getPlayers(),
-                    (stringBuilder, uuid) -> {
-                      ProxiedPlayer proxiedPlayer = TQueueBungeePlugin.getProxyServer().getPlayer(uuid);
-                      String playerName;
-                      if (proxiedPlayer == null) {
-                        playerName = "uuid:" + uuid;
-                      } else {
-                        playerName = proxiedPlayer.getDisplayName();
-                      }
-                      stringBuilder.append(playerName);
-                    },
-                    ", "));
+      namedCollection(
+        "§ePlayers §7({0}): ",
+        queue.getPlayers(),
+        (stringBuilder, uuid) -> {
+          ProxiedPlayer proxiedPlayer = TQueueBungeePlugin.getProxyServer().getPlayer(uuid);
+          String playerName;
+          if (proxiedPlayer == null) {
+            playerName = "uuid:" + uuid;
+          } else {
+            playerName = proxiedPlayer.getDisplayName();
+          }
+          stringBuilder.append(playerName);
+        },
+        ", "));
 
     sender.sendMessage(
-            new TextComponent(namedCollection("§eHandlers §7({0}): ", queue.getHandlers().keys())));
+      new TextComponent(namedCollection("§eHandlers §7({0}): ", queue.getHandlers().keys())));
 
     sender.sendMessage(new TextComponent("§eDelay: §7" + queue.getDelay()));
   }

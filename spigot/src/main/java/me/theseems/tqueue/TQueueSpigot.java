@@ -24,33 +24,33 @@ public class TQueueSpigot extends JavaPlugin {
   private static QueueCommunicator communicator;
   private static SpigotQueueConfig config;
 
-    private File prepareFile() throws IOException {
-        plugin.getDataFolder().mkdir();
-        File target = new File(plugin.getDataFolder(), "config.json");
-        if (!target.exists()) {
-            target.createNewFile();
-        }
-        return target;
+  private File prepareFile() throws IOException {
+    plugin.getDataFolder().mkdir();
+    File target = new File(plugin.getDataFolder(), "config.json");
+    if (!target.exists()) {
+      target.createNewFile();
     }
+    return target;
+  }
 
   private JedisPool buildPool() {
     final JedisPoolConfig poolConfig = new JedisPoolConfig();
     poolConfig.setMaxTotal(128);
-      poolConfig.setMaxIdle(128);
-      poolConfig.setMinIdle(2);
+    poolConfig.setMaxIdle(128);
+    poolConfig.setMinIdle(2);
     return new JedisPool(
-        poolConfig,
-        config.getRedisConfig().getHost(),
-        config.getRedisConfig().getPort(),
-        Protocol.DEFAULT_TIMEOUT,
-        config.getRedisConfig().getPassword());
+      poolConfig,
+      config.getRedisConfig().getHost(),
+      config.getRedisConfig().getPort(),
+      Protocol.DEFAULT_TIMEOUT,
+      config.getRedisConfig().getPassword());
   }
 
   private void loadConfig() {
     try {
-        File config = prepareFile();
+      File config = prepareFile();
       TQueueSpigot.config =
-          new GsonBuilder().create().fromJson(new FileReader(config), SpigotQueueConfig.class);
+        new GsonBuilder().create().fromJson(new FileReader(config), SpigotQueueConfig.class);
     } catch (IOException e) {
       getLogger().severe("Cannot load config");
       e.printStackTrace();
@@ -79,35 +79,35 @@ public class TQueueSpigot extends JavaPlugin {
 
     // Whitelist
     replier.addProcessor(
-        player -> {
-          if (!getServer().hasWhitelist()) return Optional.empty();
-          for (OfflinePlayer whitelistedPlayer : getServer().getWhitelistedPlayers()) {
-            if (whitelistedPlayer.getUniqueId() == player) return Optional.empty();
-          }
+      player -> {
+        if (!getServer().hasWhitelist()) return Optional.empty();
+        for (OfflinePlayer whitelistedPlayer : getServer().getWhitelistedPlayers()) {
+          if (whitelistedPlayer.getUniqueId() == player) return Optional.empty();
+        }
 
-          return Optional.of(Verdict.WHITELISTED);
-        });
+        return Optional.of(Verdict.WHITELISTED);
+      });
     // Ban
     replier.addProcessor(
-        player -> {
-          OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(player);
-          if (offlinePlayer.getName() == null) {
-            return Optional.empty();
-          }
-
-          if (offlinePlayer.isBanned()) {
-            BanEntry entry =
-                Bukkit.getBanList(BanList.Type.NAME).getBanEntry(offlinePlayer.getName());
-            Verdict verdict = Verdict.FORBIDDEN;
-              if (entry != null) {
-                  verdict.setDesc(entry.getReason());
-              } else {
-                  verdict.setDesc("<FT> " + Bukkit.getBanList(BanList.Type.NAME).getBanEntries());
-              }
-            return Optional.of(verdict);
-          }
+      player -> {
+        OfflinePlayer offlinePlayer = getServer().getOfflinePlayer(player);
+        if (offlinePlayer.getName() == null) {
           return Optional.empty();
-        });
+        }
+
+        if (offlinePlayer.isBanned()) {
+          BanEntry entry =
+            Bukkit.getBanList(BanList.Type.NAME).getBanEntry(offlinePlayer.getName());
+          Verdict verdict = Verdict.FORBIDDEN;
+          if (entry != null) {
+            verdict.setDesc(entry.getReason());
+          } else {
+            verdict.setDesc("<FT> " + Bukkit.getBanList(BanList.Type.NAME).getBanEntries());
+          }
+          return Optional.of(verdict);
+        }
+        return Optional.empty();
+      });
 
     Objects.requireNonNull(getCommand("qjoin")).setExecutor(new QueueJoinLocalCommand());
     Objects.requireNonNull(getCommand("qleave")).setExecutor(new QueueLeaveLocalCommand());

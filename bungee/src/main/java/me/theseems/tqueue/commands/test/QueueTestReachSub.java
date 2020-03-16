@@ -15,16 +15,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class QueueTestReachSub implements SubCommand {
-    @Override
-    public void pass(CommandSender sender, String[] args) {
-        if (args.length == 0) {
-            sender.sendMessage(
-                    new TextComponent(
-                            "§cSpecify the (optionally player) and name of server to test"));
-            return;
-        }
+  @Override
+  public void pass(CommandSender sender, String[] args) {
+    if (args.length == 0) {
+      sender.sendMessage(
+        new TextComponent(
+          "§cSpecify the (optionally player) and name of server to test"));
+      return;
+    }
 
-        String playerName;
+    String playerName;
     String serverName;
     if (args.length >= 2) {
       playerName = args[0];
@@ -44,14 +44,14 @@ public class QueueTestReachSub implements SubCommand {
 
     sender.sendMessage(new TextComponent("§eSending request..."));
     CompletableFuture<Verdict> future =
-        TQueueBungeePlugin.getMessenger().requestUser(serverName, player.getUniqueId());
+      TQueueBungeePlugin.getMessenger().requestUser(serverName, player.getUniqueId());
 
     Verdict result;
     try {
-        result = future.get(5, TimeUnit.SECONDS);
-        sender.sendMessage(
-                new TextComponent(
-                        "§6Response received: §7" + result.ok + " " + result.desc + " §7(" + result + ": " + result.desc + ")"));
+      result = future.get(5, TimeUnit.SECONDS);
+      sender.sendMessage(
+        new TextComponent(
+          "§6Response received: §7" + result.ok + " " + result.desc + " §7(" + result + ": " + result.desc + ")"));
     } catch (InterruptedException | ExecutionException | TimeoutException e) {
       sender.sendMessage(new TextComponent("§cRequest failed: §7" + e.getMessage()));
     }
@@ -59,6 +59,6 @@ public class QueueTestReachSub implements SubCommand {
 
   @Override
   public String getPermission() {
-      return "queue.test.try";
+    return "queue.test.try";
   }
 }

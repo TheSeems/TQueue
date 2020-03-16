@@ -14,16 +14,16 @@ public class QueueListSub implements SubCommand {
     sender.sendMessage(new TextComponent("§7There are " + queues.size() + " queue(s)"));
     for (Queue queue : queues) {
       sender.sendMessage(
-          new TextComponent(
-              "§7Queue §6'"
-                      + queue.getName()
-                      + "'§7 has "
-                      + queue.getDestinations().keys().size()
-                      + " destination(s), "
-                      + queue.getHandlers().keys().size()
-                      + " handler(s) and §6"
-                      + queue.getPlayers().size()
-                      + "§7 players"));
+        new TextComponent(
+          "§7Queue §6'"
+            + queue.getName()
+            + "'§7 has "
+            + queue.getDestinations().keys().size()
+            + " destination(s), "
+            + queue.getHandlers().keys().size()
+            + " handler(s) and §6"
+            + queue.getPlayers().size()
+            + "§7 players"));
     }
   }
 

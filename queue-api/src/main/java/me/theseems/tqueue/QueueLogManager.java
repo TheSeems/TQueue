@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 public interface QueueLogManager {
   /**
    * Get logger with prefix (for example, Queue name)
+   *
    * @param name of logger
    * @return logger
    */
@@ -12,6 +13,7 @@ public interface QueueLogManager {
 
   /**
    * Get default logger
+   *
    * @return logger
    */
   Logger get();

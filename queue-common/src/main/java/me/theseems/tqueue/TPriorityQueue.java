@@ -90,7 +90,7 @@ public abstract class TPriorityQueue implements Queue {
     }
 
     public void remove(UUID player) {
-        if (queue.contains(player)) getHandlers().all().forEach(handler -> handler.onLeave(player));
+        if (queue.contains(player)) getHandlers().values().forEach(handler -> handler.onLeave(player));
         queue.remove(player);
     }
 
@@ -118,48 +118,48 @@ public abstract class TPriorityQueue implements Queue {
   }
 
   public void add(UUID player) {
-      if (!queue.contains(player)) getHandlers().all().forEach(handler -> handler.onJoin(player));
+    if (!queue.contains(player)) getHandlers().values().forEach(handler -> handler.onJoin(player));
     queue.add(player);
   }
 
   public void go(UUID uuid) {
-      for (Destination destination : getDestinations().all()) {
-          if (!getPlayers().contains(uuid)) break;
+    for (Destination destination : getDestinations().values()) {
+      if (!getPlayers().contains(uuid)) break;
 
-          try {
-              Futurity.shift(destination.query(uuid))
-                      .orTimeout(1000, TimeUnit.MILLISECONDS)
-                      .whenComplete(
-                              (verdict, throwable) -> {
-                                  if (!getPlayers().contains(uuid)) return;
+      try {
+        Futurity.shift(destination.query(uuid))
+          .orTimeout(1000, TimeUnit.MILLISECONDS)
+          .whenComplete(
+            (verdict, throwable) -> {
+              if (!getPlayers().contains(uuid)) return;
 
-                                  if (throwable != null) {
-                                      if (throwable instanceof TimeoutException) {
-                                          verdict = Verdict.TIMED_OUT;
-                                          verdict.setDesc("A request has timed out");
-                                      } else {
-                                          verdict = Verdict.UNKNOWN;
-                                          verdict.setDesc("Internal error: " + throwable.getMessage());
-                                      }
-                                  }
+              if (throwable != null) {
+                if (throwable instanceof TimeoutException) {
+                  verdict = Verdict.TIMED_OUT;
+                  verdict.setDesc("A request has timed out");
+                } else {
+                  verdict = Verdict.UNKNOWN;
+                  verdict.setDesc("Internal error: " + throwable.getMessage());
+                }
+              }
 
-                                  for (QueueHandler queueHandler : getHandlers().all()) {
-                                      try {
-                                          queueHandler.onApply(uuid, destination, verdict);
-                                      } catch (Exception e) {
-                                          logger.severe(
-                                                  "Error applying verdict for "
-                                                          + uuid
-                                                          + " and "
-                                                          + destination
-                                                          + " with "
-                                                          + verdict
-                                                          + ": "
-                                                          + e.getMessage());
-                                          e.printStackTrace();
-                                      }
-                                  }
-                              });
+              for (QueueHandler queueHandler : getHandlers().values()) {
+                try {
+                  queueHandler.onApply(uuid, destination, verdict);
+                } catch (Exception e) {
+                  logger.severe(
+                    "Error applying verdict for "
+                      + uuid
+                      + " and "
+                      + destination
+                      + " with "
+                      + verdict
+                      + ": "
+                      + e.getMessage());
+                  e.printStackTrace();
+                }
+              }
+            });
           } catch (Exception e) {
               e.printStackTrace();
           }

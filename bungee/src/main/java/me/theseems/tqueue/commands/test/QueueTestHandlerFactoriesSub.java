@@ -9,8 +9,8 @@ public class QueueTestHandlerFactoriesSub implements SubCommand {
   @Override
   public void pass(CommandSender sender, String[] args) {
     sender.sendMessage(
-            QueueInfoSub.namedCollection(
-                    "§7Handler factories ({0}): ", QueueAPI.getHandlerManager().getFactories()));
+      QueueInfoSub.namedCollection(
+        "§7Handler factories ({0}): ", QueueAPI.getHandlerManager().getFactories()));
   }
 
   @Override

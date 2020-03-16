@@ -24,22 +24,22 @@ public class QueueInfoLocalCommand implements CommandExecutor {
 
   @Override
   public boolean onCommand(
-      CommandSender sender,
-      @NotNull Command command,
-      @NotNull String label,
-      @NotNull String[] args) {
+    CommandSender sender,
+    @NotNull Command command,
+    @NotNull String label,
+    @NotNull String[] args) {
     if (!sender.hasPermission("tqueue.local.info")
-        || args.length == 0
-        || !sender.hasPermission("tqueue.local.info." + args[0])) return false;
+      || args.length == 0
+      || !sender.hasPermission("tqueue.local.info." + args[0])) return false;
 
     StringBuilder builder = new StringBuilder();
     Collection<UUID> uuidCollection = TQueueSpigot.getCommunicator().getPlayers(args[0]);
     uuidCollection.forEach(
-        uuid -> {
-          Player player = Bukkit.getPlayer(uuid);
-          if (player == null) builder.append(shrink(uuid.toString()));
-          else builder.append(player.getName());
-        });
+      uuid -> {
+        Player player = Bukkit.getPlayer(uuid);
+        if (player == null) builder.append(shrink(uuid.toString()));
+        else builder.append(player.getName());
+      });
 
     sender.sendMessage("§6Queue §7'" + args[0] + "'");
     sender.sendMessage("§7(" + uuidCollection.size() + "): " + builder.toString());
