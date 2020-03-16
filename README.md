@@ -1,5 +1,6 @@
 # TQueue
-A simple queue system in minecraft
+A simple queue system in minecraft  
+[![Build Status](https://travis-ci.com/TheSeems/TQueue.svg?branch=master)](https://travis-ci.com/TheSeems/TQueue)
 
 ## What is it for
 This plugin provides partly async queue system.  
